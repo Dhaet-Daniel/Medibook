@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Find a Doctor – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">MediBook</a>
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+  <ul>
+    <li><a href="find-doctor.html" aria-current="page">Find a Doctor</a></li>
+    <li><a href="login.html" class="btn btn-outline">Login</a></li>
+    <li><a href="dashboard.html" id="dashboard-link" style="display:none;">Dashboard</a></li>
+    <li><button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button></li>
+  </ul>
+</nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-hero page-hero--blue">
+      <div class="container">
+        <h1>Find a Doctor</h1>
+        <p>Browse our team of consultants and choose the right specialist for you.</p>
+      </div>
+    </div>
+
+    <div class="container search-layout">
+      <aside class="filter-panel">
+        <h2 class="filter-title">Filter Doctors</h2>
+        <form class="filter-form">
+          <div class="form-group">
+            <label for="specialty">Specialty</label>
+            <select id="specialty">
+              <option value="">All Specialties</option>
+              <option>Cardiology</option><option>Dermatology</option><option>Neurology</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="availability">Availability</label>
+            <select id="availability">
+              <option value="">Any Time</option>
+              <option>Morning</option><option>Afternoon</option><option>Evening</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="location">Location</label>
+            <select id="location">
+              <option value="">All Locations</option>
+              <option>Main Hospital</option><option>West Wing</option><option>East Wing</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="rating">Minimum Rating</label>
+            <select id="rating">
+              <option value="">Any Rating</option>
+              <option value="4">4+ Stars</option>
+              <option value="3">3+ Stars</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Apply Filters</button>
+          <button type="button" id="clear-filters" class="btn btn-outline btn-full">Clear Filters</button>
+        </form>
+      </aside>
+
+      <section class="doctor-results">
+        <p class="results-count">Loading doctors...</p>
+        <div class="doctor-grid"></div>
+      </section>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

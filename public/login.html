@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body class="auth-page">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-icon" aria-hidden="true">&#9829;</span> MediBook
+      </a>
+    </div>
+  </header>
+
+  <main id="main-content" class="auth-main">
+    <div class="auth-card">
+      <div class="auth-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" class="tab-btn tab-active" id="tab-login" aria-controls="panel-login">Login</button>
+        <button type="button" role="tab" aria-selected="false" class="tab-btn" id="tab-register" aria-controls="panel-register">Register</button>
+      </div>
+
+      <section id="panel-login" role="tabpanel" aria-labelledby="tab-login">
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to manage your appointments.</p>
+        <form class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+        </form>
+      </section>
+
+      <section id="panel-register" role="tabpanel" aria-labelledby="tab-register" hidden>
+        <h1 class="auth-title">Create an Account</h1>
+        <p class="auth-subtitle">Register to book appointments online.</p>
+        <form class="auth-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-fname">First Name</label>
+              <input type="text" id="reg-fname" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-lname">Last Name</label>
+              <input type="text" id="reg-lname" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email Address</label>
+            <input type="email" id="reg-email" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-dob">Date of Birth</label>
+            <input type="date" id="reg-dob" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Booking Confirmed – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">MediBook</a>
+      <nav class="main-nav" role="navigation" aria-label="Main navigation">
+        <ul>
+          <li><a href="find-doctor.html">Find a Doctor</a></li>
+          <li><a href="login.html" class="btn btn-outline">Login</a></li>
+          <li><a href="dashboard.html" id="dashboard-link" style="display:none;">Dashboard</a></li>
+          <li><button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="confirmation-wrapper">
+      <div class="confirmation-card">
+        <div class="confirm-icon" aria-hidden="true">✓</div>
+        <h1>Appointment Confirmed!</h1>
+        <p class="confirm-subtitle">Your booking has been successfully registered.</p>
+
+        <dl class="confirm-details">
+          <div class="confirm-row"><dt>Doctor</dt><dd id="confirm-doctor">—</dd></div>
+          <div class="confirm-row"><dt>Date</dt><dd id="confirm-date">—</dd></div>
+          <div class="confirm-row"><dt>Time</dt><dd id="confirm-time">—</dd></div>
+          <div class="confirm-row"><dt>Reference</dt><dd class="ref-number" id="confirm-ref">—</dd></div>
+        </dl>
+
+        <div class="confirm-actions">
+          <button onclick="addToCalendar()" class="btn btn-primary">Add to Calendar</button>
+          <a href="index.html" class="btn btn-outline">Return to Home</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

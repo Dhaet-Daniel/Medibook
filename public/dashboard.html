@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="index.html" class="logo" aria-label="MediBook Home">
+        <span class="logo-icon" aria-hidden="true">&#9829;</span> MediBook
+      </a>
+      <nav class="main-nav" role="navigation" aria-label="Main navigation">
+        <ul>
+          <li><a href="find-doctor.html">Find a Doctor</a></li>
+          <li><a href="dashboard.html" aria-current="page">Dashboard</a></li>
+          <li><a href="login.html" class="btn btn-outline" id="login-nav">Login</a></li>
+          <li><a href="#" id="dashboard-link" style="display:none;">Dashboard</a></li>
+          <li><button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="dashboard-hero">
+      <div class="container">
+        <div class="profile-summary">
+          <div class="profile-avatar" id="profile-avatar">
+            <span id="avatar-initials">U</span>
+          </div>
+          <div class="profile-welcome">
+            <h1 id="welcome-message">Welcome back, <span id="user-name">User</span>!</h1>
+            <p id="user-email" class="text-muted">user@example.com</p>
+            <p id="member-since" class="text-small">Member since: --</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container dashboard-layout">
+      <aside class="dashboard-sidebar" aria-label="Dashboard navigation">
+        <nav>
+          <ul class="dashboard-nav">
+            <li><a href="#" class="nav-link active" data-section="appointments">📅 My Appointments</a></li>
+            <li><a href="#" class="nav-link" data-section="profile">👤 Profile Settings</a></li>
+            <li><a href="#" class="nav-link" data-section="history">📋 Medical History</a></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <section class="dashboard-content">
+        <!-- Appointments Section -->
+        <div id="appointments-section" class="dashboard-section active">
+          <h2>My Appointments</h2>
+          <div id="appointments-list" class="appointments-grid">
+            <div class="loading-spinner">Loading your appointments...</div>
+          </div>
+        </div>
+
+        <!-- Profile Settings Section -->
+        <div id="profile-section" class="dashboard-section">
+          <h2>Profile Settings</h2>
+          <div class="profile-card">
+            <form class="profile-form" id="profile-form" novalidate>
+              <div class="form-group">
+                <label for="profile-firstname">First Name</label>
+                <input type="text" id="profile-firstname" name="firstName" required>
+              </div>
+              <div class="form-group">
+                <label for="profile-lastname">Last Name</label>
+                <input type="text" id="profile-lastname" name="lastName" required>
+              </div>
+              <div class="form-group">
+                <label for="profile-email">Email Address</label>
+                <input type="email" id="profile-email" name="email" required>
+              </div>
+              <div class="form-group">
+                <label for="profile-phone">Phone Number</label>
+                <input type="tel" id="profile-phone" name="phone" placeholder="+1234567890">
+              </div>
+              <div class="form-group">
+                <label for="profile-dob">Date of Birth</label>
+                <input type="date" id="profile-dob" name="dateOfBirth" disabled>
+                <span class="field-hint">Date of birth cannot be changed. Contact support if incorrect.</span>
+              </div>
+              <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Medical History Section (placeholder) -->
+        <div id="history-section" class="dashboard-section">
+          <h2>Medical History</h2>
+          <div class="history-placeholder">
+            <p>No medical history records found.</p>
+            <p class="text-small">Medical records will appear here once shared by your doctors.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <p>&copy; 2026 MediBook Hospital. All rights reserved.</p>
+    </div>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>

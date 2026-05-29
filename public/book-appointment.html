@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Book Appointment – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">MediBook</a>
+      <nav class="main-nav" role="navigation" aria-label="Main navigation">
+        <ul>
+          <li><a href="find-doctor.html">Find a Doctor</a></li>
+          <li><a href="book-appointment.html" aria-current="page">Book Appointment</a></li>
+          <li><a href="login.html" class="btn btn-outline">Login</a></li>
+          <li><a href="dashboard.html" id="dashboard-link" style="display:none;">Dashboard</a></li>
+          <li><button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-hero page-hero--teal">
+      <div class="container">
+        <h1>Book an Appointment</h1>
+        <p>Complete the form below to confirm your appointment.</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="booking-layout">
+        <section class="booking-form-section">
+          <h2>Appointment Details</h2>
+          <form class="booking-form" novalidate>
+            <div class="form-group">
+              <label for="appt-doctor">Doctor</label>
+              <select id="appt-doctor" required>
+                <option value="">-- Select a Doctor --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="appt-date">Preferred Date</label>
+              <input type="date" id="appt-date" required>
+            </div>
+            <fieldset class="time-slots">
+              <legend>Available Time Slots</legend>
+              <div class="slot-grid">
+                <label class="slot"><input type="radio" name="timeslot" value="09:00"> 09:00</label>
+                <label class="slot"><input type="radio" name="timeslot" value="09:30"> 09:30</label>
+                <label class="slot"><input type="radio" name="timeslot" value="10:00"> 10:00</label>
+                <label class="slot"><input type="radio" name="timeslot" value="11:00"> 11:00</label>
+                <label class="slot"><input type="radio" name="timeslot" value="14:00"> 14:00</label>
+              </div>
+            </fieldset>
+            <div class="form-group">
+              <label for="appt-reason">Reason for Visit (optional)</label>
+              <textarea id="appt-reason" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <a href="find-doctor.html" class="btn btn-outline">&larr; Back</a>
+              <button type="submit" class="btn btn-primary">Confirm Booking &rarr;</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
