@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find a Doctor – MediBook</title>
   <link rel="stylesheet" href="main.css">
 </head>
@@ -31,7 +32,7 @@
     <div class="container search-layout">
       <aside class="filter-panel">
         <h2 class="filter-title">Filter Doctors</h2>
-        <form class="filter-form">
+        <form class="filter-form" novalidate>
           <div class="form-group">
             <label for="specialty">Specialty</label>
             <select id="specialty">
@@ -72,6 +73,9 @@
       </section>
     </div>
   </main>
+  <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+    <span class="theme-toggle-icon" aria-hidden="true"></span>
+  </button>
   <script src="script.js"></script>
 </body>
 </html>

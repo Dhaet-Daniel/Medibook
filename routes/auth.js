@@ -93,4 +93,34 @@ router.put('/me', auth, async (req, res) => {
   }
 });
 
+// GET user notification preferences
+router.get('/preferences', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('notifications');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user.notifications);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT update notification preferences
+router.put('/preferences', auth, async (req, res) => {
+  try {
+    const { email, sms, push } = req.body;
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.notifications = {
+      email: typeof email === 'boolean' ? email : user.notifications.email,
+      sms: typeof sms === 'boolean' ? sms : user.notifications.sms,
+      push: typeof push === 'boolean' ? push : user.notifications.push
+    };
+    await user.save();
+    res.json(user.notifications);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

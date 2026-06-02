@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Book Appointment – MediBook</title>
   <link rel="stylesheet" href="main.css">
 </head>
 <body>
-  <header class="site-header">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header class="site-header" role="banner">
     <div class="header-inner">
-      <a href="index.html" class="logo">MediBook</a>
+      <a href="index.html" class="logo" aria-label="MediBook Home">
+        <span class="logo-icon" aria-hidden="true">&#9829;</span> MediBook
+      </a>
       <nav class="main-nav" role="navigation" aria-label="Main navigation">
         <ul>
           <li><a href="find-doctor.html">Find a Doctor</a></li>
@@ -21,52 +25,119 @@
     </div>
   </header>
 
-  <main>
-    <div class="page-hero page-hero--teal">
+  <main id="main-content">
+    <div class="page-hero page-hero--blue">
       <div class="container">
         <h1>Book an Appointment</h1>
-        <p>Complete the form below to confirm your appointment.</p>
+        <p>Follow the steps below – it takes less than a minute.</p>
       </div>
     </div>
 
     <div class="container">
-      <div class="booking-layout">
-        <section class="booking-form-section">
-          <h2>Appointment Details</h2>
-          <form class="booking-form" novalidate>
-            <div class="form-group">
-              <label for="appt-doctor">Doctor</label>
-              <select id="appt-doctor" required>
-                <option value="">-- Select a Doctor --</option>
-              </select>
+      <!-- Wizard Steps Indicator -->
+      <div class="wizard-steps">
+        <div class="step-item active" data-step="1">
+          <span class="step-number">1</span>
+          <span class="step-label">Specialty</span>
+        </div>
+        <div class="step-item" data-step="2">
+          <span class="step-number">2</span>
+          <span class="step-label">Doctor</span>
+        </div>
+        <div class="step-item" data-step="3">
+          <span class="step-number">3</span>
+          <span class="step-label">Date & Time</span>
+        </div>
+        <div class="step-item" data-step="4">
+          <span class="step-number">4</span>
+          <span class="step-label">Confirm</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Select Specialty -->
+      <div class="wizard-step" id="step-1">
+        <div class="booking-card">
+          <h2>Select a medical specialty</h2>
+          <p class="step-description">Choose the type of specialist you need to see.</p>
+          <div class="specialty-grid" id="specialty-grid">
+            <!-- Dynamic specialties loaded from existing doctors -->
+          </div>
+          <div class="step-actions">
+            <button class="btn btn-primary next-step" data-next="2">Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Choose Doctor (filtered by specialty) -->
+      <div class="wizard-step" id="step-2" style="display:none;">
+        <div class="booking-card">
+          <h2 id="specialty-name"></h2>
+          <p class="step-description">Choose your preferred specialist.</p>
+          <div class="doctor-grid-wizard" id="doctor-grid-wizard"></div>
+          <div class="step-actions">
+            <button class="btn btn-outline prev-step" data-prev="1">← Back</button>
+            <button class="btn btn-primary next-step" data-next="3" id="confirm-doctor-btn" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Pick Date & Time -->
+      <div class="wizard-step" id="step-3" style="display:none;">
+        <div class="booking-card">
+          <h2>Select date & time</h2>
+          <p class="step-description">Pick your preferred appointment date and time slot.</p>
+          <div class="form-group">
+            <label for="appt-date">Preferred Date <span class="required">*</span></label>
+            <input type="date" id="appt-date" required aria-describedby="date-hint">
+            <span id="date-hint" class="field-hint">Choose an available appointment date</span>
+          </div>
+          <fieldset class="time-slots">
+            <legend>Available Time Slots <span class="required">*</span></legend>
+            <div class="slot-grid" id="slot-grid">
+              <label class="slot"><input type="radio" name="timeslot" value="09:00"> 09:00 AM</label>
+              <label class="slot"><input type="radio" name="timeslot" value="09:30"> 09:30 AM</label>
+              <label class="slot"><input type="radio" name="timeslot" value="10:00"> 10:00 AM</label>
+              <label class="slot"><input type="radio" name="timeslot" value="11:00"> 11:00 AM</label>
+              <label class="slot"><input type="radio" name="timeslot" value="14:00"> 02:00 PM</label>
+              <label class="slot"><input type="radio" name="timeslot" value="15:00"> 03:00 PM</label>
             </div>
-            <div class="form-group">
-              <label for="appt-date">Preferred Date</label>
-              <input type="date" id="appt-date" required>
-            </div>
-            <fieldset class="time-slots">
-              <legend>Available Time Slots</legend>
-              <div class="slot-grid">
-                <label class="slot"><input type="radio" name="timeslot" value="09:00"> 09:00</label>
-                <label class="slot"><input type="radio" name="timeslot" value="09:30"> 09:30</label>
-                <label class="slot"><input type="radio" name="timeslot" value="10:00"> 10:00</label>
-                <label class="slot"><input type="radio" name="timeslot" value="11:00"> 11:00</label>
-                <label class="slot"><input type="radio" name="timeslot" value="14:00"> 14:00</label>
-              </div>
-            </fieldset>
-            <div class="form-group">
-              <label for="appt-reason">Reason for Visit (optional)</label>
-              <textarea id="appt-reason" rows="3"></textarea>
-            </div>
-            <div class="form-actions">
-              <a href="find-doctor.html" class="btn btn-outline">&larr; Back</a>
-              <button type="submit" class="btn btn-primary">Confirm Booking &rarr;</button>
-            </div>
-          </form>
-        </section>
+          </fieldset>
+          <div class="form-group">
+            <label for="appt-reason">Reason for Visit <span class="field-optional">(Optional)</span></label>
+            <textarea id="appt-reason" rows="4" placeholder="Briefly describe your symptoms or concerns..." aria-describedby="reason-hint"></textarea>
+            <span id="reason-hint" class="field-hint">Help your doctor prepare for your visit</span>
+          </div>
+          <div class="step-actions">
+            <button class="btn btn-outline prev-step" data-prev="2">← Back</button>
+            <button class="btn btn-primary next-step" data-next="4" id="confirm-time-btn" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Confirm Details -->
+      <div class="wizard-step" id="step-4" style="display:none;">
+        <div class="booking-card">
+          <h2>Confirm your appointment</h2>
+          <p class="step-description">Review your booking details before confirming.</p>
+          <div class="summary-card" id="summary-card"></div>
+          <div class="step-actions">
+            <button class="btn btn-outline prev-step" data-prev="3">← Back</button>
+            <button class="btn btn-primary" id="final-book-btn">Confirm Booking →</button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2026 MediBook Hospital. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+    <span class="theme-toggle-icon" aria-hidden="true"></span>
+  </button>
   <script src="script.js"></script>
 </body>
 </html>

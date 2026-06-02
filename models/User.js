@@ -8,7 +8,17 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   phone: { type: String, default: '' },
   dateOfBirth: { type: Date, required: true },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  
+  // Notification preferences
+  notifications: {
+    email: { type: Boolean, default: true },
+    sms: { type: Boolean, default: false },
+    push: { type: Boolean, default: false }
+  },
+  
+  // Favorite doctors
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' }]
 });
 
 // No next() needed – just an async function

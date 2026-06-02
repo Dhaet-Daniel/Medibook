@@ -6,7 +6,7 @@ function authHeader() {
   return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
 
-function showNotification(message, type = 'info') {
+function showLegacyNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `notification notification--${type}`;
   notification.innerHTML = `
@@ -25,6 +25,244 @@ function showNotification(message, type = 'info') {
     setTimeout(() => notification.remove(), 300);
   });
 }
+
+function showNotification(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast--${type}`;
+  toast.setAttribute('role', 'status');
+  toast.innerHTML = `
+    <span class="toast-indicator" aria-hidden="true"></span>
+    <span>${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+function showSkeleton(container, count = 3) {
+  if (!container) return;
+  container.innerHTML = Array.from({ length: count }, () => '<div class="skeleton" aria-hidden="true"></div>').join('');
+}
+
+// ========== PERSONALIZATION & PREFERENCES ==========
+
+function initDarkMode() {
+  const toggle = document.getElementById('darkModeToggle');
+  const isDark = localStorage.getItem('darkMode') === 'true';
+  document.documentElement.classList.toggle('dark', isDark);
+  if (!toggle) return;
+
+  toggle.addEventListener('click', () => {
+    const nextIsDark = !document.documentElement.classList.contains('dark');
+    document.documentElement.classList.toggle('dark', nextIsDark);
+    localStorage.setItem('darkMode', String(nextIsDark));
+  });
+}
+
+function initLanguagePreference() {
+  const langSelect = document.getElementById('language');
+  const savedLang = localStorage.getItem('language') || 'en';
+  if (langSelect) {
+    langSelect.value = savedLang;
+    langSelect.addEventListener('change', () => {
+      localStorage.setItem('language', langSelect.value);
+      showNotification(`Language set to ${langSelect.options[langSelect.selectedIndex].text}`, 'info');
+    });
+  }
+}
+
+function initAccessibility() {
+  const largeTextBtn = document.getElementById('largeTextToggle');
+  const highContrastBtn = document.getElementById('highContrastToggle');
+
+  // Load saved preferences
+  if (localStorage.getItem('largeText') === 'true') {
+    document.body.classList.add('large-text');
+    if (largeTextBtn) largeTextBtn.classList.add('active');
+  }
+  if (localStorage.getItem('highContrast') === 'true') {
+    document.body.classList.add('high-contrast');
+    if (highContrastBtn) highContrastBtn.classList.add('active');
+  }
+
+  // Toggle handlers
+  if (largeTextBtn) {
+    largeTextBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.body.classList.toggle('large-text');
+      largeTextBtn.classList.toggle('active');
+      localStorage.setItem('largeText', document.body.classList.contains('large-text'));
+      showNotification('Large text mode ' + (document.body.classList.contains('large-text') ? 'enabled' : 'disabled'), 'info');
+    });
+  }
+
+  if (highContrastBtn) {
+    highContrastBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.body.classList.toggle('high-contrast');
+      highContrastBtn.classList.toggle('active');
+      localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
+      showNotification('High contrast mode ' + (document.body.classList.contains('high-contrast') ? 'enabled' : 'disabled'), 'info');
+    });
+  }
+}
+
+// ========== NOTIFICATION PREFERENCES ==========
+
+async function loadNotificationPrefs() {
+  try {
+    const res = await fetch('/api/auth/preferences', { headers: authHeader() });
+    if (!res.ok) return;
+    const prefs = await res.json();
+    
+    const emailCheckbox = document.getElementById('notif-email');
+    const smsCheckbox = document.getElementById('notif-sms');
+    const pushCheckbox = document.getElementById('notif-push');
+
+    if (emailCheckbox) emailCheckbox.checked = prefs.email;
+    if (smsCheckbox) smsCheckbox.checked = prefs.sms;
+    if (pushCheckbox) pushCheckbox.checked = prefs.push;
+  } catch (err) {
+    console.error('Failed to load notification preferences:', err);
+  }
+}
+
+async function saveNotificationPrefs() {
+  try {
+    const prefs = {
+      email: document.getElementById('notif-email')?.checked || false,
+      sms: document.getElementById('notif-sms')?.checked || false,
+      push: document.getElementById('notif-push')?.checked || false
+    };
+
+    const res = await fetch('/api/auth/preferences', {
+      method: 'PUT',
+      headers: authHeader(),
+      body: JSON.stringify(prefs)
+    });
+
+    if (res.ok) {
+      showNotification('Preferences saved successfully', 'success');
+    } else {
+      showNotification('Failed to save preferences', 'error');
+    }
+  } catch (err) {
+    showNotification('Error saving preferences', 'error');
+    console.error(err);
+  }
+}
+
+// ========== FAVORITE DOCTORS ==========
+
+let userFavorites = [];
+
+async function loadFavorites() {
+  try {
+    const token = getToken();
+    if (!token) return;
+    
+    const res = await fetch('/api/doctors/favorites', { headers: authHeader() });
+    if (res.ok) {
+      userFavorites = await res.json();
+    }
+  } catch (err) {
+    console.error('Failed to load favorites:', err);
+  }
+}
+
+async function toggleFavorite(doctorId, btn) {
+  try {
+    const isFavorited = userFavorites.some(f => f._id === doctorId);
+    const method = isFavorited ? 'DELETE' : 'POST';
+    
+    const res = await fetch(`/api/doctors/${doctorId}/favorite`, { 
+      method, 
+      headers: authHeader() 
+    });
+
+    if (res.ok) {
+      if (isFavorited) {
+        userFavorites = userFavorites.filter(f => f._id !== doctorId);
+        if (btn) {
+          btn.textContent = '🤍';
+          btn.classList.remove('favorited');
+        }
+        showNotification('Removed from favorites', 'info');
+      } else {
+        userFavorites.push({ _id: doctorId });
+        if (btn) {
+          btn.textContent = '❤️';
+          btn.classList.add('favorited');
+        }
+        showNotification('Added to favorites', 'success');
+      }
+    }
+  } catch (err) {
+    showNotification('Error updating favorite', 'error');
+    console.error(err);
+  }
+}
+
+async function loadFavoritesDashboard() {
+  try {
+    const container = document.getElementById('favorites-list');
+    if (!container) return;
+
+    if (userFavorites.length === 0) {
+      container.innerHTML = '<p>You haven\'t favorited any doctors yet. <a href="find-doctor.html">Browse doctors</a> to add favorites.</p>';
+      return;
+    }
+
+    container.innerHTML = userFavorites.map(doc => `
+      <div class="favorite-doctor-card">
+        <h3>${doc.name}</h3>
+        <p>${doc.specialty}</p>
+        <p class="text-small">⭐ ${doc.rating} (${doc.reviews} reviews)</p>
+        <p class="text-small">📍 ${doc.location}</p>
+        <a href="book-appointment.html?doctor=${doc._id}" class="btn btn-primary">Book Now</a>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load favorites on dashboard:', err);
+  }
+}
+
+// ========== RECENTLY BOOKED DOCTORS ==========
+
+function addToRecentBookings(doctorId, doctorName) {
+  try {
+    let recent = JSON.parse(localStorage.getItem('recentBookings')) || [];
+    recent = recent.filter(r => r.id !== doctorId);
+    recent.unshift({ id: doctorId, name: doctorName });
+    if (recent.length > 3) recent.pop();
+    localStorage.setItem('recentBookings', JSON.stringify(recent));
+  } catch (err) {
+    console.error('Error adding to recent bookings:', err);
+  }
+}
+
+function loadRecentDoctors() {
+  try {
+    const recent = JSON.parse(localStorage.getItem('recentBookings')) || [];
+    const container = document.getElementById('recent-list');
+    if (!container) return;
+
+    if (recent.length === 0) {
+      container.innerHTML = '<p>No recent bookings yet. <a href="find-doctor.html">Book an appointment</a> to get started.</p>';
+      return;
+    }
+
+    container.innerHTML = recent.map(doc => `
+      <div class="recent-doctor-card">
+        <span>${doc.name}</span>
+        <a href="book-appointment.html?doctor=${doc.id}" class="btn btn-outline">Book Again</a>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Failed to load recent doctors:', err);
+  }
+}
+
+// ========== END PERSONALIZATION & PREFERENCES ==========
 
 // Auth API calls
 async function handleLogin(email, password) {
@@ -52,6 +290,29 @@ async function handleRegister(firstName, lastName, email, password, dateOfBirth)
   localStorage.setItem('token', data.token);
   localStorage.setItem('userName', `${data.user.firstName} ${data.user.lastName}`);
   localStorage.setItem('userEmail', data.user.email);
+  return data;
+}
+
+async function fetchDoctors() {
+  const response = await fetch('/api/doctors');
+  if (!response.ok) throw new Error('Failed to fetch doctors');
+  return response.json();
+}
+
+async function fetchAppointments() {
+  const response = await fetch('/api/appointments', { headers: authHeader() });
+  if (!response.ok) throw new Error('Failed to fetch appointments');
+  return response.json();
+}
+
+async function createAppointment(appointmentData) {
+  const response = await fetch('/api/appointments', {
+    method: 'POST',
+    headers: authHeader(),
+    body: JSON.stringify(appointmentData)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Failed to book appointment');
   return data;
 }
 
@@ -189,6 +450,7 @@ async function updateUserProfile(profileData) {
 async function loadAppointments() {
   const appointmentsList = document.getElementById('appointments-list');
   if (!appointmentsList) return;
+  showSkeleton(appointmentsList, 3);
   try {
     const appointments = await fetchAppointments();
     if (!appointments.length) {
@@ -255,6 +517,11 @@ async function loadDashboardData() {
     }
 
     await loadAppointments();
+    
+    // Load personalization data
+    await loadFavorites();
+    loadFavoritesDashboard();
+    loadRecentDoctors();
   } catch (err) {
     showNotification(err.message, 'error');
     console.error(err);
@@ -301,6 +568,36 @@ function initProfileForm() {
   });
 }
 
+function initPreferencesForm() {
+  const preferencesForm = document.getElementById('preferences-form');
+  if (!preferencesForm) return;
+
+  // Load initial preferences
+  initLanguagePreference();
+  loadNotificationPrefs();
+
+  // Handle form submission
+  preferencesForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = preferencesForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.textContent = 'Saving...';
+      submitBtn.disabled = true;
+    }
+
+    try {
+      await saveNotificationPrefs();
+    } catch (err) {
+      showNotification('Error saving preferences', 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.textContent = 'Save Preferences';
+        submitBtn.disabled = false;
+      }
+    }
+  });
+}
+
 function initDashboardNav() {
   const navLinks = document.querySelectorAll('.dashboard-nav a');
   const sections = document.querySelectorAll('.dashboard-section');
@@ -319,18 +616,391 @@ function initDashboardNav() {
   });
 }
 
+async function initDoctorFilter() {
+  const filterForm = document.querySelector('.filter-form');
+  const clearBtn = document.getElementById('clear-filters');
+  const doctorGrid = document.querySelector('.doctor-grid');
+  const resultsCount = document.querySelector('.results-count');
+  
+  if (!doctorGrid) {
+    console.warn('Doctor grid not found - are we on the right page?');
+    return;
+  }
+
+  let allDoctors = [];
+
+  try {
+    showSkeleton(doctorGrid, 3);
+    allDoctors = await fetchDoctors();
+    renderDoctors(allDoctors);
+  } catch (err) {
+    console.error('Failed to load doctors:', err);
+    doctorGrid.innerHTML = '<p class="error">Unable to load doctors. Please refresh the page.</p>';
+    if (resultsCount) resultsCount.textContent = 'Error loading doctors';
+    return;
+  }
+
+  function renderDoctors(doctors) {
+    if (!doctors.length) {
+      doctorGrid.innerHTML = '<p class="no-results">No doctors match your filters. Try adjusting your criteria.</p>';
+      if (resultsCount) resultsCount.textContent = 'Showing 0 doctors';
+      return;
+    }
+    doctorGrid.innerHTML = doctors.map(doc => {
+      const isFavorited = userFavorites.some(f => f._id === doc._id);
+      return `
+      <article class="doctor-card">
+        <div class="doctor-avatar">${doc.avatarInitials || doc.name.charAt(0)}</div>
+        <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" data-id="${doc._id}" aria-label="Toggle favorite">
+          ${isFavorited ? '❤️' : '🤍'}
+        </button>
+        <div class="doctor-info">
+          <h3>${doc.name}</h3>
+          <p class="doctor-spec">${doc.specialty}</p>
+          <p class="doctor-location">${doc.location}</p>
+          <div class="doctor-rating">
+            <span class="stars">${'★'.repeat(Math.floor(doc.rating))}${doc.rating % 1 ? '½' : ''}</span>
+            <span class="rating-text">${doc.rating} (${doc.reviews} reviews)</span>
+          </div>
+          <p class="doctor-avail">Next available: ${doc.nextAvailable}</p>
+          <a href="book-appointment.html?doctor=${doc._id}" class="btn btn-primary">Book Now</a>
+        </div>
+      </article>
+    `}).join('');
+    
+    // Attach favorite button handlers
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const doctorId = btn.dataset.id;
+        toggleFavorite(doctorId, btn);
+      });
+    });
+    
+    if (resultsCount) resultsCount.textContent = `Showing ${doctors.length} doctor${doctors.length !== 1 ? 's' : ''}`;
+  }
+
+  // Filter submit handler
+  if (filterForm) {
+    filterForm.addEventListener('submit', (e) => {
+      e.preventDefault(); // CRITICAL: prevents page reload
+      
+      const specialty = document.getElementById('specialty')?.value.toLowerCase() || '';
+      const availability = document.getElementById('availability')?.value.toLowerCase() || '';
+      const location = document.getElementById('location')?.value.toLowerCase() || '';
+      const rating = document.getElementById('rating')?.value || '';
+      
+      let filtered = allDoctors;
+      if (specialty) filtered = filtered.filter(d => d.specialty.toLowerCase().includes(specialty));
+      if (location) filtered = filtered.filter(d => d.location.toLowerCase().includes(location));
+      if (rating) filtered = filtered.filter(d => d.rating >= parseInt(rating));
+      if (availability) {
+        filtered = filtered.filter(d => d.nextAvailable.toLowerCase().includes(availability));
+      }
+      renderDoctors(filtered);
+    });
+  }
+
+  // Clear filters button
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (filterForm) filterForm.reset();
+      // Reset each select manually to ensure empty value
+      const specialtyEl = document.getElementById('specialty');
+      const availabilityEl = document.getElementById('availability');
+      const locationEl = document.getElementById('location');
+      const ratingEl = document.getElementById('rating');
+      if (specialtyEl) specialtyEl.value = '';
+      if (availabilityEl) availabilityEl.value = '';
+      if (locationEl) locationEl.value = '';
+      if (ratingEl) ratingEl.value = '';
+      renderDoctors(allDoctors);
+    });
+  }
+}
+
+// ========== BOOKING WIZARD ==========
+let wizardState = {
+  step: 1,
+  specialty: null,
+  doctorId: null,
+  doctorName: null,
+  date: null,
+  time: null,
+  reason: ''
+};
+
+let allDoctors = [];
+let uniqueSpecialties = [];
+
+async function loadDoctorsForWizard() {
+  try {
+    allDoctors = await fetchDoctors();
+    uniqueSpecialties = [...new Set(allDoctors.map(d => d.specialty))].sort();
+    renderSpecialties();
+
+    // Check if doctor ID is in URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const doctorId = urlParams.get('doctor');
+    if (doctorId) {
+      const selectedDoc = allDoctors.find(d => d._id === doctorId);
+      if (selectedDoc) {
+        wizardState.specialty = selectedDoc.specialty;
+        wizardState.doctorId = selectedDoc._id;
+        wizardState.doctorName = selectedDoc.name;
+        // Skip to step 2 (doctor selection) since specialty is already determined
+        renderDoctorsBySpecialty();
+        showStep(2);
+        return;
+      }
+    }
+    // Otherwise start at step 1
+    showStep(1);
+  } catch (err) {
+    showNotification('Failed to load doctors', 'error');
+    console.error(err);
+  }
+}
+
+function renderSpecialties() {
+  const container = document.getElementById('specialty-grid');
+  if (!container) return;
+  
+  container.innerHTML = uniqueSpecialties.map(spec => `
+    <div class="specialty-card" data-specialty="${spec}">
+      <h3>${spec}</h3>
+    </div>
+  `).join('');
+
+  // Add click handlers
+  document.querySelectorAll('.specialty-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      wizardState.specialty = card.dataset.specialty;
+      document.getElementById('specialty-name').textContent = `${wizardState.specialty} Specialists`;
+      renderDoctorsBySpecialty();
+    });
+  });
+}
+
+function renderDoctorsBySpecialty() {
+  const container = document.getElementById('doctor-grid-wizard');
+  if (!container) return;
+  
+  const filtered = allDoctors.filter(d => d.specialty === wizardState.specialty);
+  
+  container.innerHTML = filtered.map(doc => `
+    <div class="doctor-card-wizard" data-doctor-id="${doc._id}" data-doctor-name="${doc.name}">
+      <h3>${doc.name}</h3>
+      <p>⭐ ${doc.rating} (${doc.reviews} reviews)</p>
+      <p class="text-small">📍 ${doc.location}</p>
+      <p class="text-small">Next available: ${doc.nextAvailable}</p>
+    </div>
+  `).join('');
+
+  // Add click handlers
+  document.querySelectorAll('.doctor-card-wizard').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.doctor-card-wizard').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      wizardState.doctorId = card.dataset.doctorId;
+      wizardState.doctorName = card.dataset.doctorName;
+      document.getElementById('confirm-doctor-btn').disabled = false;
+    });
+  });
+
+  // If doctor was pre-selected from URL, highlight it
+  if (wizardState.doctorId) {
+    const preselected = document.querySelector(`.doctor-card-wizard[data-doctor-id="${wizardState.doctorId}"]`);
+    if (preselected) {
+      preselected.classList.add('selected');
+      document.getElementById('confirm-doctor-btn').disabled = false;
+    }
+  }
+}
+
+function updateSummary() {
+  const summaryDiv = document.getElementById('summary-card');
+  if (!summaryDiv) return;
+
+  const dateObj = new Date(wizardState.date + 'T00:00:00');
+  const formattedDate = dateObj.toLocaleDateString('en-GB', { 
+    weekday: 'short', 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+
+  const [hours, minutes] = wizardState.time.split(':');
+  const timeObj = new Date();
+  timeObj.setHours(parseInt(hours), parseInt(minutes));
+  const formattedTime = timeObj.toLocaleTimeString('en-GB', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+
+  summaryDiv.innerHTML = `
+    <p><strong>Doctor:</strong> ${wizardState.doctorName}</p>
+    <p><strong>Date:</strong> ${formattedDate}</p>
+    <p><strong>Time:</strong> ${formattedTime}</p>
+    <p><strong>Reason:</strong> ${wizardState.reason || '(Not provided)'}</p>
+  `;
+}
+
+function showStep(stepNumber) {
+  const steps = document.querySelectorAll('.wizard-step');
+  const stepIndicators = document.querySelectorAll('.step-item');
+
+  steps.forEach((step, idx) => {
+    step.style.display = idx + 1 === stepNumber ? 'block' : 'none';
+  });
+
+  stepIndicators.forEach((ind, idx) => {
+    if (idx + 1 === stepNumber) {
+      ind.classList.add('active');
+    } else {
+      ind.classList.remove('active');
+    }
+  });
+
+  wizardState.step = stepNumber;
+
+  // Update summary on step 4
+  if (stepNumber === 4) {
+    updateSummary();
+  }
+}
+
+function initWizard() {
+  const dateInput = document.getElementById('appt-date');
+  
+  // Set minimum date to today
+  if (dateInput) {
+    dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+  }
+
+  // Next button handlers
+  document.querySelectorAll('.next-step').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const nextStep = parseInt(btn.dataset.next);
+
+      // Validate before moving to next step
+      if (nextStep === 2 && !wizardState.specialty) {
+        showNotification('Please select a specialty first', 'error');
+        return;
+      }
+      if (nextStep === 3 && !wizardState.doctorId) {
+        showNotification('Please select a doctor', 'error');
+        return;
+      }
+      if (nextStep === 4) {
+        const date = document.getElementById('appt-date').value;
+        const timeSlot = document.querySelector('input[name="timeslot"]:checked');
+        
+        if (!date || !timeSlot) {
+          showNotification('Please select both date and time', 'error');
+          return;
+        }
+        
+        wizardState.date = date;
+        wizardState.time = timeSlot.value;
+        wizardState.reason = document.getElementById('appt-reason').value;
+      }
+
+      showStep(nextStep);
+    });
+  });
+
+  // Previous button handlers
+  document.querySelectorAll('.prev-step').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prevStep = parseInt(btn.dataset.prev);
+      showStep(prevStep);
+    });
+  });
+
+  // Final booking button
+  const finalBookBtn = document.getElementById('final-book-btn');
+  if (finalBookBtn) {
+    finalBookBtn.addEventListener('click', async () => {
+      finalBookBtn.textContent = 'Booking...';
+      finalBookBtn.disabled = true;
+
+      try {
+        const appointmentData = {
+          doctorId: wizardState.doctorId,
+          date: wizardState.date,
+          time: wizardState.time,
+          reason: wizardState.reason
+        };
+
+        await createAppointment(appointmentData);
+        
+        // Add to recently booked doctors
+        addToRecentBookings(wizardState.doctorId, wizardState.doctorName);
+        
+        showNotification('Appointment booked successfully!', 'success');
+        setTimeout(() => window.location.href = 'dashboard.html', 1500);
+      } catch (err) {
+        showNotification(err.message || 'Failed to book appointment', 'error');
+        finalBookBtn.textContent = 'Confirm Booking →';
+        finalBookBtn.disabled = false;
+      }
+    });
+  }
+
+  // Enable date/time button validation
+  const dateInput2 = document.getElementById('appt-date');
+  const confirmTimeBtn = document.getElementById('confirm-time-btn');
+  const timeSlotRadios = document.querySelectorAll('input[name="timeslot"]');
+
+  function validateDateTime() {
+    const hasDate = dateInput2 && dateInput2.value;
+    const hasTime = document.querySelector('input[name="timeslot"]:checked');
+    if (confirmTimeBtn) {
+      confirmTimeBtn.disabled = !(hasDate && hasTime);
+    }
+  }
+
+  if (dateInput2) {
+    dateInput2.addEventListener('change', validateDateTime);
+  }
+
+  timeSlotRadios.forEach(radio => {
+    radio.addEventListener('change', validateDateTime);
+  });
+}
+
+// ========== END BOOKING WIZARD ==========
+
 // Initialize everything when page loads
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  initDarkMode();
+  initAccessibility();
   initTabs();
   initLoginForm();
   initRegisterForm();
   updateNav();
+  initDoctorFilter();
   setMaxDateOfBirth();
+  
+  // Load favorites for Find Doctor page
+  await loadFavorites();
 
+  // Check if we're on a page that needs the wizard
+  const isBookingPage = document.getElementById('step-1');
+  if (isBookingPage) {
+    await loadDoctorsForWizard();
+    initWizard();
+  }
+
+  // Check if we're on the dashboard
   const isDashboardPage = document.querySelector('.dashboard-nav');
   if (isDashboardPage) {
     initDashboardNav();
     initProfileForm();
+    initPreferencesForm();
     loadDashboardData();
   }
 });
