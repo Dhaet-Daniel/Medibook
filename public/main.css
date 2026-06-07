@@ -671,11 +671,34 @@ input[aria-invalid='true'], select[aria-invalid='true'] {
 .appointment-card {
   display: flex; justify-content: space-between; align-items: center;
   padding: 20px; background: var(--color-bg); border: 1px solid var(--color-border);
-  border-radius: var(--radius-md); transition: box-shadow .2s;
+  border-radius: var(--radius-md); transition: box-shadow .2s, transform .2s;
 }
-.appointment-card:hover { box-shadow: var(--shadow-md); }
+.appointment-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.appointment-card--cancelled {
+  opacity: 0.76;
+  filter: grayscale(0.14);
+}
+.appointment-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.status-badge {
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+.status-badge--upcoming { background: rgba(52, 152, 219, 0.12); color: var(--color-primary); }
+.status-badge--rescheduled { background: rgba(241, 196, 15, 0.12); color: var(--color-warning); }
+.status-badge--cancelled { background: rgba(231, 76, 60, 0.12); color: var(--color-danger); }
+.status-badge--completed { background: rgba(46, 204, 113, 0.12); color: var(--color-success); }
 .appointment-info h3 { margin-bottom: 4px; }
-.appointment-actions { display: flex; gap: 8px; }
+.appointment-actions { display: flex; gap: 8px; align-items: center; }
 .no-appointments, .no-history {
   text-align: center; color: var(--color-text-muted);
   padding: 40px; font-style: italic;
@@ -1108,6 +1131,30 @@ body.high-contrast button {
   flex-direction: column;
   gap: 12px;
 }
+
+/* Modal styles for reschedule and confirmation */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 1200;
+}
+.modal[aria-hidden="false"] { display: flex; }
+.modal-dialog {
+  background: var(--color-surface);
+  padding: 20px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+}
+.modal-dialog h3 { margin-top: 0; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.modal .form-group { margin-bottom: 12px; }
+.modal input[type="date"], .modal input[type="time"] { width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; }
 
 .favorites-grid {
   display: grid;

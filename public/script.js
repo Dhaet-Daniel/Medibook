@@ -302,7 +302,8 @@ async function fetchDoctors() {
 async function fetchAppointments() {
   const response = await fetch('/api/appointments', { headers: authHeader() });
   if (!response.ok) throw new Error('Failed to fetch appointments');
-  return response.json();
+  const data = await response.json();
+  return Array.isArray(data) ? data.filter(appt => appt.status !== 'cancelled') : [];
 }
 
 async function createAppointment(appointmentData) {
@@ -461,23 +462,134 @@ async function loadAppointments() {
         </div>`;
       return;
     }
-    appointmentsList.innerHTML = appointments.map(appt => `
-      <div class="appointment-card">
+    appointmentsList.innerHTML = appointments.map(appt => {
+      const status = appt.status || 'upcoming';
+      const statusLabel = status === 'cancelled' ? 'Cancelled' : status === 'rescheduled' ? 'Rescheduled' : status === 'completed' ? 'Completed' : 'Upcoming';
+      const isEditable = status === 'upcoming' || status === 'rescheduled';
+      return `
+      <div class="appointment-card ${status === 'cancelled' ? 'appointment-card--cancelled' : ''}">
         <div class="appointment-info">
-          <h3>${appt.doctorName}</h3>
+          <div class="appointment-row">
+            <h3>${appt.doctorName}</h3>
+            <span class="status-badge status-badge--${status}">${statusLabel}</span>
+          </div>
           <p><strong>Date:</strong> ${new Date(appt.date).toLocaleDateString()}</p>
           <p><strong>Time:</strong> ${appt.time}</p>
           ${appt.reason ? `<p><strong>Reason:</strong> ${appt.reason}</p>` : ''}
         </div>
         <div class="appointment-actions">
-          <button class="btn btn-outline btn-sm" onclick="reschedulePrompt('${appt._id}')">Reschedule</button>
-          <button class="btn btn-outline btn-sm" onclick="cancelAppointmentUI('${appt._id}')">Cancel</button>
+          ${isEditable ? `
+            <button class="btn btn-outline btn-sm" onclick="openRescheduleModal('${appt._id}','${appt.date}','${appt.time}')">Reschedule</button>
+            <button class="btn btn-outline btn-sm" onclick="openConfirmModal('${appt._id}','Are you sure you want to cancel this appointment?')">Cancel</button>
+          ` : `<span class="text-small">This appointment is ${statusLabel.toLowerCase()}.</span>`}
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (err) {
     appointmentsList.innerHTML = `<p class="error-message">Failed to load appointments. ${err.message}</p>`;
   }
+}
+
+// Modal-based reschedule and confirmation handlers
+function openRescheduleModal(appointmentId, dateISO, time) {
+  const modal = document.getElementById('reschedule-modal');
+  if (!modal) return;
+  const idInput = document.getElementById('reschedule-id');
+  const dateInput = document.getElementById('reschedule-date');
+  const timeInput = document.getElementById('reschedule-time');
+  idInput.value = appointmentId || '';
+  if (dateISO) {
+    try {
+      const d = new Date(dateISO);
+      dateInput.value = d.toISOString().split('T')[0];
+    } catch (e) {
+      dateInput.value = '';
+    }
+  } else dateInput.value = '';
+  timeInput.value = time || '';
+  modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeRescheduleModal() {
+  const modal = document.getElementById('reschedule-modal');
+  if (!modal) return;
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function openConfirmModal(appointmentId, message) {
+  const modal = document.getElementById('confirm-modal');
+  if (!modal) return;
+  modal.setAttribute('aria-hidden', 'false');
+  document.getElementById('confirm-message').textContent = message || 'Are you sure?';
+  modal._targetId = appointmentId;
+}
+
+function closeConfirmModal() {
+  const modal = document.getElementById('confirm-modal');
+  if (!modal) return;
+  modal.setAttribute('aria-hidden', 'true');
+  modal._targetId = null;
+}
+
+// Wire modal form submit and confirm actions
+function initModals() {
+  const rescheduleForm = document.getElementById('reschedule-form');
+  const rescheduleCancel = document.getElementById('reschedule-cancel');
+  const confirmOk = document.getElementById('confirm-ok');
+  const confirmCancel = document.getElementById('confirm-cancel');
+
+  if (rescheduleForm) {
+    rescheduleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('reschedule-id').value;
+      const date = document.getElementById('reschedule-date').value;
+      const time = document.getElementById('reschedule-time').value;
+      if (!id || !date || !time) {
+        showNotification('Please provide both date and time', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/appointments/${id}/reschedule`, {
+          method: 'PATCH',
+          headers: authHeader(),
+          body: JSON.stringify({ date, time })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to reschedule appointment');
+        showNotification('Appointment rescheduled', 'success');
+        closeRescheduleModal();
+        await loadAppointments();
+      } catch (err) {
+        showNotification(err.message, 'error');
+        console.error(err);
+      }
+    });
+  }
+
+  if (rescheduleCancel) rescheduleCancel.addEventListener('click', (e) => { e.preventDefault(); closeRescheduleModal(); });
+
+  if (confirmOk) {
+    confirmOk.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const modal = document.getElementById('confirm-modal');
+      const id = modal && modal._targetId;
+      if (!id) { closeConfirmModal(); return; }
+      try {
+        const res = await fetch(`/api/appointments/${id}/cancel`, { method: 'PATCH', headers: authHeader() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Failed to cancel appointment');
+        showNotification('Appointment cancelled', 'success');
+        closeConfirmModal();
+        await loadAppointments();
+      } catch (err) {
+        showNotification(err.message, 'error');
+        console.error(err);
+      }
+    });
+  }
+
+  if (confirmCancel) confirmCancel.addEventListener('click', (e) => { e.preventDefault(); closeConfirmModal(); });
 }
 
 async function loadDashboardData() {
@@ -1001,6 +1113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initDashboardNav();
     initProfileForm();
     initPreferencesForm();
+    initModals();
     loadDashboardData();
   }
 });

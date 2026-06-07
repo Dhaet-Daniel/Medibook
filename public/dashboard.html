@@ -182,5 +182,39 @@
     <span class="theme-toggle-icon" aria-hidden="true"></span>
   </button>
   <script src="script.js"></script>
+  
+  <!-- Reschedule Modal -->
+  <div id="reschedule-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reschedule-title">
+      <h3 id="reschedule-title">Reschedule Appointment</h3>
+      <form id="reschedule-form">
+        <input type="hidden" id="reschedule-id">
+        <div class="form-group">
+          <label for="reschedule-date">New Date</label>
+          <input type="date" id="reschedule-date" required>
+        </div>
+        <div class="form-group">
+          <label for="reschedule-time">New Time</label>
+          <input type="time" id="reschedule-time" required>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="button" class="btn btn-outline" id="reschedule-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirm-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+      <h3 id="confirm-title">Confirm Action</h3>
+      <p id="confirm-message">Are you sure?</p>
+      <div class="modal-actions">
+        <button id="confirm-ok" class="btn btn-primary">Yes</button>
+        <button id="confirm-cancel" class="btn btn-outline">No</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

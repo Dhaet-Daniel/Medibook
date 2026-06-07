@@ -53,4 +53,22 @@ router.patch('/:id/cancel', auth, async (req, res) => {
   }
 });
 
+// Reschedule appointment (update date and time)
+router.patch('/:id/reschedule', auth, async (req, res) => {
+  try {
+    const { date, time } = req.body;
+    if (!date || !time) return res.status(400).json({ error: 'Date and time are required to reschedule.' });
+
+    const appointment = await Appointment.findOneAndUpdate(
+      { _id: req.params.id, user: req.userId },
+      { date: new Date(date), time, status: 'rescheduled' },
+      { new: true }
+    );
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found.' });
+    res.json(appointment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

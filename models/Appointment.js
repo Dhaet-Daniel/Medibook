@@ -7,7 +7,7 @@ const appointmentSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   time: { type: String, required: true },
   reason: { type: String, default: '' },
-  status: { type: String, enum: ['upcoming', 'completed', 'cancelled'], default: 'upcoming' },
+  status: { type: String, enum: ['upcoming', 'rescheduled', 'completed', 'cancelled'], default: 'upcoming' },
   createdAt: { type: Date, default: Date.now }
 });
 
