@@ -600,18 +600,26 @@ async function loadDashboardData() {
 
   try {
     const user = await fetchUserProfile();
-    const userName = `${user.firstName} ${user.lastName}`;
+    const userName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
     localStorage.setItem('userName', userName);
-    localStorage.setItem('userEmail', user.email);
+    localStorage.setItem('userEmail', user.email || '');
 
-    document.getElementById('user-name').textContent = user.firstName;
-    document.getElementById('welcome-message').innerHTML = `Welcome back, <span id="user-name">${user.firstName}</span>!`;
-    document.getElementById('user-email').textContent = user.email;
-    const memberDate = new Date(user.createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long' });
-    document.getElementById('member-since').textContent = `Member since: ${memberDate}`;
+    const firstName = user.firstName || '';
+    const lastName = user.lastName || '';
+    const initials = ((firstName.charAt(0) || '') + (lastName.charAt(0) || '')).toUpperCase() || 'U';
 
-    const initials = (user.firstName[0] + (user.lastName[0] || '')).toUpperCase();
+    const userNameEl = document.getElementById('user-name');
+    const welcomeMessageEl = document.getElementById('welcome-message');
+    const userEmailEl = document.getElementById('user-email');
+    const memberSinceEl = document.getElementById('member-since');
     const avatarInitials = document.getElementById('avatar-initials');
+
+    if (userNameEl) userNameEl.textContent = firstName;
+    if (welcomeMessageEl) welcomeMessageEl.innerHTML = `Welcome back, <span id="user-name">${firstName}</span>!`;
+    if (userEmailEl) userEmailEl.textContent = user.email || '';
+    if (memberSinceEl && user.createdAt) {
+      memberSinceEl.textContent = `Member since: ${new Date(user.createdAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long' })}`;
+    }
     if (avatarInitials) avatarInitials.textContent = initials;
 
     const profileFirst = document.getElementById('profile-firstname');
@@ -628,16 +636,210 @@ async function loadDashboardData() {
       profileDob.value = new Date(user.dateOfBirth).toISOString().split('T')[0];
     }
 
+    await loadKPI();
+    initQuickActions();
     await loadAppointments();
-    
-    // Load personalization data
-    await loadFavorites();
-    loadFavoritesDashboard();
+    await loadFavoritesDashboard();
     loadRecentDoctors();
   } catch (err) {
     showNotification(err.message, 'error');
     console.error(err);
   }
+}
+
+async function loadKPI() {
+  const kpiGrid = document.getElementById('kpi-grid');
+  if (!kpiGrid) return;
+  showSkeleton(kpiGrid, 4);
+
+  await new Promise(resolve => setTimeout(resolve, 500));
+  const kpiData = {
+    todayAppointments: 4,
+    upcomingAppointments: 12,
+    cancellationsThisMonth: 2,
+    activeDoctors: 8
+  };
+
+  kpiGrid.innerHTML = `
+    <div class="kpi-card">
+      <h4>Today's Appointments</h4>
+      <div class="kpi-value">${kpiData.todayAppointments}</div>
+    </div>
+    <div class="kpi-card">
+      <h4>Upcoming</h4>
+      <div class="kpi-value">${kpiData.upcomingAppointments}</div>
+    </div>
+    <div class="kpi-card">
+      <h4>Cancellations (month)</h4>
+      <div class="kpi-value">${kpiData.cancellationsThisMonth}</div>
+    </div>
+    <div class="kpi-card">
+      <h4>Active Doctors</h4>
+      <div class="kpi-value">${kpiData.activeDoctors}</div>
+    </div>
+  `;
+}
+
+let weeklyChart, peakChart;
+
+function initCharts() {
+  const weeklyCanvas = document.getElementById('weeklyChart');
+  const peakCanvas = document.getElementById('peakHoursChart');
+  if (weeklyCanvas) {
+    const ctxWeekly = weeklyCanvas.getContext('2d');
+    weeklyChart = new Chart(ctxWeekly, {
+      type: 'bar',
+      data: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{
+          label: 'Appointments',
+          data: [3, 5, 2, 7, 8, 4, 1],
+          backgroundColor: 'rgba(14, 165, 233, 0.9)',
+          borderRadius: 8,
+          barThickness: 24,
+          maxBarThickness: 36
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        layout: { padding: { top: 8, right: 8, bottom: 4, left: 4 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+            padding: 10
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: 'var(--text-secondary)' }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226, 232, 240, 0.6)' },
+            ticks: { color: 'var(--text-secondary)' }
+          }
+        }
+      }
+    });
+  }
+  if (peakCanvas) {
+    const ctxPeak = peakCanvas.getContext('2d');
+    peakChart = new Chart(ctxPeak, {
+      type: 'line',
+      data: {
+        labels: ['9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm'],
+        datasets: [{
+          label: 'Bookings',
+          data: [2, 4, 6, 3, 1, 5, 7, 2],
+          borderColor: 'rgba(14, 165, 233, 0.95)',
+          backgroundColor: 'rgba(14, 165, 233, 0.16)',
+          fill: true,
+          tension: 0.32,
+          pointRadius: 4,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: 'rgba(14, 165, 233, 0.9)',
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        layout: { padding: { top: 8, right: 8, bottom: 4, left: 4 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+            padding: 10
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: 'var(--text-secondary)' }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(226, 232, 240, 0.6)' },
+            ticks: { color: 'var(--text-secondary)' }
+          }
+        }
+      }
+    });
+  }
+}
+
+async function loadActivityFeed() {
+  const container = document.getElementById('activity-list');
+  if (!container) return;
+  showSkeleton(container, 3);
+  await new Promise(resolve => setTimeout(resolve, 400));
+
+  const activities = [
+    { type: 'booking', doctor: 'Dr. Rachel Ahmed', time: '2 hours ago' },
+    { type: 'cancel', doctor: 'Dr. Samuel Mbeki', time: 'Yesterday' },
+    { type: 'reschedule', doctor: 'Dr. Helen Clarke', time: '3 days ago' },
+    { type: 'booking', doctor: 'Dr. Priya Kapoor', time: '4 days ago' },
+    { type: 'booking', doctor: 'Dr. Noah Smith', time: '5 days ago' }
+  ];
+
+  container.innerHTML = activities.map(activity => `
+    <div class="activity-item">
+      <span>${activity.type === 'booking' ? '📅' : activity.type === 'cancel' ? '❌' : '🔄'}</span>
+      <span><strong>${activity.doctor}</strong> – ${activity.type} ${activity.time}</span>
+    </div>
+  `).join('');
+}
+
+function initQuickActions() {
+  const bookBtn = document.getElementById('quick-book');
+  const favBtn = document.getElementById('quick-favorites');
+  const reportsBtn = document.getElementById('quick-reports');
+
+  if (bookBtn) {
+    bookBtn.addEventListener('click', () => {
+      window.location.href = 'find-doctor.html';
+    });
+  }
+  if (favBtn) {
+    favBtn.addEventListener('click', () => {
+      const favoritesTab = document.querySelector('.dashboard-tabs .tab-btn[data-tab="favorites"]');
+      favoritesTab?.click();
+    });
+  }
+  if (reportsBtn) {
+    reportsBtn.addEventListener('click', () => {
+      showNotification('Reports coming soon!', 'info');
+    });
+  }
+}
+
+function initDashboardTabs() {
+  const tabs = document.querySelectorAll('.dashboard-tabs .tab-btn');
+  const panels = document.querySelectorAll('.tab-content');
+  if (!tabs.length || !panels.length) return;
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const selected = tab.dataset.tab;
+      tabs.forEach(t => t.classList.toggle('active', t === tab));
+      panels.forEach(panel => panel.classList.toggle('active', panel.id === `${selected}-tab`));
+      if (selected === 'favorites') loadFavoritesDashboard();
+      if (selected === 'recent') loadRecentDoctors();
+    });
+  });
 }
 
 function initProfileForm() {
@@ -1094,7 +1296,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   initLoginForm();
   initRegisterForm();
   updateNav();
-  initDoctorFilter();
+  if (document.querySelector('.doctor-grid')) {
+    initDoctorFilter();
+    initCharts();
+    await loadActivityFeed();
+  }
   setMaxDateOfBirth();
   
   // Load favorites for Find Doctor page
@@ -1108,13 +1314,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Check if we're on the dashboard
-  const isDashboardPage = document.querySelector('.dashboard-nav');
+  const isDashboardPage = document.querySelector('.dashboard-tabs');
   if (isDashboardPage) {
-    initDashboardNav();
+    initDashboardTabs();
     initProfileForm();
     initPreferencesForm();
     initModals();
-    loadDashboardData();
+    await loadDashboardData();
   }
 });
 

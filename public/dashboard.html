@@ -10,15 +10,12 @@
   <a href="#main-content" class="skip-link">Skip to main content</a>
   <header class="site-header" role="banner">
     <div class="header-inner">
-      <a href="index.html" class="logo" aria-label="MediBook Home">
-        <span class="logo-icon" aria-hidden="true">&#9829;</span> MediBook
-      </a>
+      <a href="index.html" class="logo">MediBook</a>
       <nav class="main-nav" role="navigation" aria-label="Main navigation">
         <ul>
           <li><a href="find-doctor.html">Find a Doctor</a></li>
           <li><a href="dashboard.html" aria-current="page">Dashboard</a></li>
           <li><a href="login.html" class="btn btn-outline" id="login-nav">Login</a></li>
-          <li><a href="#" id="dashboard-link" style="display:none;">Dashboard</a></li>
           <li><button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button></li>
         </ul>
       </nav>
@@ -29,11 +26,9 @@
     <div class="dashboard-hero">
       <div class="container">
         <div class="profile-summary">
-          <div class="profile-avatar" id="profile-avatar">
-            <span id="avatar-initials">U</span>
-          </div>
+          <div class="profile-avatar" id="profile-avatar"><span id="avatar-initials">U</span></div>
           <div class="profile-welcome">
-            <h1 id="welcome-message">Welcome back, <span id="user-name">User</span>!</h1>
+            <h1>Welcome back, <span id="user-name">User</span>!</h1>
             <p id="user-email" class="text-muted">user@example.com</p>
             <p id="member-since" class="text-small">Member since: --</p>
           </div>
@@ -41,148 +36,102 @@
       </div>
     </div>
 
-    <div class="container dashboard-layout">
-      <aside class="dashboard-sidebar" aria-label="Dashboard navigation">
-        <nav>
-          <ul class="dashboard-nav">
-            <li><a href="#" class="nav-link active" data-section="appointments">📅 My Appointments</a></li>
-            <li><a href="#" class="nav-link" data-section="recent">⏱️ Recently Booked</a></li>
-            <li><a href="#" class="nav-link" data-section="favorites">❤️ Favorite Doctors</a></li>
-            <li><a href="#" class="nav-link" data-section="profile">👤 Profile Settings</a></li>
-            <li><a href="#" class="nav-link" data-section="preferences">⚙️ Preferences</a></li>
-            <li><a href="#" class="nav-link" data-section="history">📋 Medical History</a></li>
-          </ul>
-        </nav>
-      </aside>
+    <div class="container">
+      <!-- KPI Cards -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card skeleton">Loading...</div>
+        <div class="kpi-card skeleton">Loading...</div>
+        <div class="kpi-card skeleton">Loading...</div>
+        <div class="kpi-card skeleton">Loading...</div>
+      </div>
 
-      <section class="dashboard-content">
-        <!-- Appointments Section -->
-        <div id="appointments-section" class="dashboard-section active">
-          <h2>My Appointments</h2>
-          <div id="appointments-list" class="appointments-grid">
-            <div class="loading-spinner">Loading your appointments...</div>
+      <!-- Quick Actions -->
+      <div class="dashboard-bottom">
+        <div class="card quick-actions">
+          <h3>Quick Actions</h3>
+          <div class="actions-grid">
+            <button id="quick-book" class="btn btn-primary">📅 Book Appointment</button>
+            <button id="quick-favorites" class="btn btn-outline">⭐ View Favorites</button>
+            <button id="quick-reports" class="btn btn-outline">📊 Reports</button>
           </div>
         </div>
+      </div>
 
-        <!-- Profile Settings Section -->
-        <div id="profile-section" class="dashboard-section">
-          <h2>Profile Settings</h2>
-          <div class="profile-card">
-            <form class="profile-form" id="profile-form" novalidate>
-              <div class="form-group">
-                <label for="profile-firstname">First Name</label>
-                <input type="text" id="profile-firstname" name="firstName" required>
-              </div>
-              <div class="form-group">
-                <label for="profile-lastname">Last Name</label>
-                <input type="text" id="profile-lastname" name="lastName" required>
-              </div>
-              <div class="form-group">
-                <label for="profile-email">Email Address</label>
-                <input type="email" id="profile-email" name="email" required>
-              </div>
-              <div class="form-group">
-                <label for="profile-phone">Phone Number</label>
-                <input type="tel" id="profile-phone" name="phone" placeholder="+1234567890">
-              </div>
-              <div class="form-group">
-                <label for="profile-dob">Date of Birth</label>
-                <input type="date" id="profile-dob" name="dateOfBirth" disabled>
-                <span class="field-hint">Date of birth cannot be changed. Contact support if incorrect.</span>
-              </div>
-              <button type="submit" class="btn btn-primary">Save Changes</button>
-            </form>
-          </div>
+      <!-- Dashboard Tabs -->
+      <div class="dashboard-tabs">
+        <button class="tab-btn active" data-tab="appointments">My Appointments</button>
+        <button class="tab-btn" data-tab="favorites">⭐ Favorites</button>
+        <button class="tab-btn" data-tab="recent">🕒 Recently Booked</button>
+        <button class="tab-btn" data-tab="preferences">⚙️ Preferences</button>
+      </div>
+
+      <div id="appointments-tab" class="tab-content active">
+        <h2>My Appointments</h2>
+        <div id="appointments-list" class="appointments-grid">
+          <div class="loading-spinner">Loading your appointments...</div>
         </div>
+      </div>
 
-        <!-- Medical History Section (placeholder) -->
-        <div id="history-section" class="dashboard-section">
-          <h2>Medical History</h2>
-          <div class="history-placeholder">
-            <p>No medical history records found.</p>
-            <p class="text-small">Medical records will appear here once shared by your doctors.</p>
-          </div>
+      <div id="favorites-tab" class="tab-content">
+        <h2>Your Favorite Doctors</h2>
+        <div id="favorites-list" class="favorites-grid">
+          <p>You haven't favorited any doctors yet. <a href="find-doctor.html">Browse doctors</a> to add favorites.</p>
         </div>
+      </div>
 
-        <!-- Recently Booked Doctors Section -->
-        <div id="recent-section" class="dashboard-section">
-          <h2>Recently Booked Doctors</h2>
-          <div id="recent-list" class="recent-list">
-            <p>No recent bookings yet.</p>
-          </div>
+      <div id="recent-tab" class="tab-content">
+        <h2>Recently Booked Doctors</h2>
+        <div id="recent-list" class="recent-list">
+          <p>No recent bookings yet.</p>
         </div>
+      </div>
 
-        <!-- Favorite Doctors Section -->
-        <div id="favorites-section" class="dashboard-section">
-          <h2>Your Favorite Doctors</h2>
-          <div id="favorites-list" class="favorites-grid">
-            <p>You haven't favorited any doctors yet. <a href="find-doctor.html">Browse doctors</a> to add favorites.</p>
-          </div>
-        </div>
-
-        <!-- Preferences Section -->
-        <div id="preferences-section" class="dashboard-section">
-          <h2>Preferences & Settings</h2>
-          <div class="profile-card">
-            <form class="preferences-form" id="preferences-form" novalidate>
-              <!-- Language Preference -->
-              <div class="preference-group">
-                <label for="language">🌐 Language</label>
-                <select id="language">
-                  <option value="en">English</option>
-                  <option value="es">Español</option>
-                  <option value="fr">Français</option>
-                  <option value="de">Deutsch</option>
-                  <option value="it">Italiano</option>
-                </select>
+      <div id="preferences-tab" class="tab-content">
+        <h2>Preferences & Settings</h2>
+        <div class="profile-card">
+          <form class="preferences-form" id="preferences-form" novalidate>
+            <div class="form-group">
+              <label for="language">🌐 Language</label>
+              <select id="language">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="it">Italiano</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <p style="font-weight: 600; margin: 0 0 8px 0;">📬 Notification Preferences</p>
+              <label><input type="checkbox" id="notif-email"> Email Notifications</label>
+              <label><input type="checkbox" id="notif-sms"> SMS Notifications</label>
+              <label><input type="checkbox" id="notif-push"> Push Notifications</label>
+            </div>
+            <div class="form-group">
+              <p style="font-weight: 600; margin: 0 0 8px 0;">♿ Accessibility Options</p>
+              <div class="preference-buttons">
+                <button type="button" id="largeTextToggle" class="btn btn-outline">🔤 Large Text</button>
+                <button type="button" id="highContrastToggle" class="btn btn-outline">🎨 High Contrast</button>
               </div>
-
-              <!-- Notification Preferences -->
-              <div class="preference-group">
-                <p style="font-weight: 600; margin: 0 0 8px 0;">📬 Notification Preferences</p>
-                <label>
-                  <input type="checkbox" id="notif-email" checked> Email Notifications
-                </label>
-                <label>
-                  <input type="checkbox" id="notif-sms"> SMS Notifications
-                </label>
-                <label>
-                  <input type="checkbox" id="notif-push"> Push Notifications
-                </label>
-              </div>
-
-              <!-- Accessibility Options -->
-              <div class="preference-group">
-                <p style="font-weight: 600; margin: 0 0 8px 0;">♿ Accessibility Options</p>
-                <div class="preference-buttons">
-                  <button type="button" id="largeTextToggle" class="btn btn-outline">
-                    🔤 Large Text
-                  </button>
-                  <button type="button" id="highContrastToggle" class="btn btn-outline">
-                    🎨 High Contrast
-                  </button>
-                </div>
-              </div>
-
-              <!-- Save Preferences Button -->
-              <button type="submit" class="btn btn-primary">Save Preferences</button>
-            </form>
-          </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Preferences</button>
+          </form>
         </div>
-      </section>
+      </div>
     </div>
   </main>
 
-  <footer class="site-footer" role="contentinfo">
+  <footer class="site-footer">
     <div class="container footer-inner">
       <p>&copy; 2026 MediBook Hospital. All rights reserved.</p>
     </div>
   </footer>
+
   <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
     <span class="theme-toggle-icon" aria-hidden="true"></span>
   </button>
+
   <script src="script.js"></script>
-  
+
   <!-- Reschedule Modal -->
   <div id="reschedule-modal" class="modal" aria-hidden="true">
     <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reschedule-title">
