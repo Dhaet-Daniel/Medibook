@@ -27,15 +27,40 @@ function showLegacyNotification(message, type = 'info') {
 }
 
 function showNotification(message, type = 'info') {
+  // Create a toast container if not present
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.style.position = 'fixed';
+    container.style.right = '1rem';
+    container.style.bottom = '1rem';
+    container.style.zIndex = 1100;
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column-reverse';
+    container.style.gap = '0.5rem';
+    document.body.appendChild(container);
+  }
+
   const toast = document.createElement('div');
   toast.className = `toast toast--${type}`;
   toast.setAttribute('role', 'status');
   toast.innerHTML = `
     <span class="toast-indicator" aria-hidden="true"></span>
-    <span>${message}</span>
+    <div style="flex:1">${message}</div>
+    <button class="toast-close" aria-label="Close toast">×</button>
   `;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
+  container.appendChild(toast);
+
+  // Auto-dismiss
+  const timer = setTimeout(() => {
+    toast.remove();
+  }, 4000);
+
+  toast.querySelector('.toast-close').addEventListener('click', () => {
+    clearTimeout(timer);
+    toast.remove();
+  });
 }
 
 function showSkeleton(container, count = 3) {
@@ -203,12 +228,19 @@ async function toggleFavorite(doctorId, btn) {
 }
 
 async function loadFavoritesDashboard() {
+  const container = document.getElementById('favorites-list');
+  if (!container) return;
+  showSkeleton(container, 3);
   try {
-    const container = document.getElementById('favorites-list');
-    if (!container) return;
-
-    if (userFavorites.length === 0) {
-      container.innerHTML = '<p>You haven\'t favorited any doctors yet. <a href="find-doctor.html">Browse doctors</a> to add favorites.</p>';
+    await new Promise(r => setTimeout(r, 250));
+    if (!userFavorites || userFavorites.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🤍</div>
+          <h3>No favorites yet</h3>
+          <p>Browse our doctors and add favorites to quickly book later.</p>
+          <a href="find-doctor.html" class="btn btn-primary">Find a Doctor</a>
+        </div>`;
       return;
     }
 
@@ -216,12 +248,13 @@ async function loadFavoritesDashboard() {
       <div class="favorite-doctor-card">
         <h3>${doc.name}</h3>
         <p>${doc.specialty}</p>
-        <p class="text-small">⭐ ${doc.rating} (${doc.reviews} reviews)</p>
-        <p class="text-small">📍 ${doc.location}</p>
+        <p class="text-small">⭐ ${doc.rating || '—'} (${doc.reviews || 0} reviews)</p>
+        <p class="text-small">📍 ${doc.location || '—'}</p>
         <a href="book-appointment.html?doctor=${doc._id}" class="btn btn-primary">Book Now</a>
       </div>
     `).join('');
   } catch (err) {
+    container.innerHTML = `<p class="error-message">Failed to load favorites.</p>`;
     console.error('Failed to load favorites on dashboard:', err);
   }
 }
@@ -240,14 +273,21 @@ function addToRecentBookings(doctorId, doctorName) {
   }
 }
 
-function loadRecentDoctors() {
+async function loadRecentDoctors() {
+  const container = document.getElementById('recent-list');
+  if (!container) return;
+  showSkeleton(container, 2);
   try {
+    await new Promise(r => setTimeout(r, 200));
     const recent = JSON.parse(localStorage.getItem('recentBookings')) || [];
-    const container = document.getElementById('recent-list');
-    if (!container) return;
-
     if (recent.length === 0) {
-      container.innerHTML = '<p>No recent bookings yet. <a href="find-doctor.html">Book an appointment</a> to get started.</p>';
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🕒</div>
+          <h3>No recent bookings</h3>
+          <p>Your recent appointments will appear here.</p>
+          <a href="find-doctor.html" class="btn btn-primary">Find a Doctor</a>
+        </div>`;
       return;
     }
 
@@ -258,6 +298,7 @@ function loadRecentDoctors() {
       </div>
     `).join('');
   } catch (err) {
+    container.innerHTML = `<p class="error-message">Failed to load recent bookings.</p>`;
     console.error('Failed to load recent doctors:', err);
   }
 }
@@ -651,36 +692,97 @@ async function loadKPI() {
   const kpiGrid = document.getElementById('kpi-grid');
   if (!kpiGrid) return;
   showSkeleton(kpiGrid, 4);
+  // Try to fetch live data for KPIs. Fall back to placeholders on error.
+  try {
+    const [apptsRes, docsRes] = await Promise.all([
+      fetch('/api/appointments', { headers: authHeader() }),
+      fetch('/api/doctors')
+    ]);
 
-  await new Promise(resolve => setTimeout(resolve, 500));
-  const kpiData = {
-    todayAppointments: 4,
-    upcomingAppointments: 12,
-    cancellationsThisMonth: 2,
-    activeDoctors: 8
-  };
+    let appointments = [];
+    if (apptsRes.ok) appointments = await apptsRes.json();
+    let doctors = [];
+    if (docsRes.ok) doctors = await docsRes.json();
 
-  kpiGrid.innerHTML = `
-    <div class="kpi-card">
-      <h4>Today's Appointments</h4>
-      <div class="kpi-value">${kpiData.todayAppointments}</div>
-    </div>
-    <div class="kpi-card">
-      <h4>Upcoming</h4>
-      <div class="kpi-value">${kpiData.upcomingAppointments}</div>
-    </div>
-    <div class="kpi-card">
-      <h4>Cancellations (month)</h4>
-      <div class="kpi-value">${kpiData.cancellationsThisMonth}</div>
-    </div>
-    <div class="kpi-card">
-      <h4>Active Doctors</h4>
-      <div class="kpi-value">${kpiData.activeDoctors}</div>
-    </div>
-  `;
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+
+    const todayAppointments = appointments.filter(a => {
+      const d = new Date(a.date);
+      return d >= startOfToday && d < endOfToday && a.status !== 'cancelled';
+    }).length;
+
+    const upcomingAppointments = appointments.filter(a => {
+      const d = new Date(a.date);
+      return d >= endOfToday && a.status !== 'cancelled';
+    }).length;
+
+    const cancellationsThisMonth = appointments.filter(a => {
+      if (a.status !== 'cancelled') return false;
+      const d = new Date(a.updatedAt || a.date);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+
+    const activeDoctors = Array.isArray(doctors) ? doctors.length : 0;
+
+    kpiGrid.innerHTML = `
+      <div class="kpi-card">
+        <h4>Today's Appointments</h4>
+        <div class="kpi-value">${todayAppointments}</div>
+      </div>
+      <div class="kpi-card">
+        <h4>Upcoming</h4>
+        <div class="kpi-value">${upcomingAppointments}</div>
+      </div>
+      <div class="kpi-card">
+        <h4>Cancellations (month)</h4>
+        <div class="kpi-value">${cancellationsThisMonth}</div>
+      </div>
+      <div class="kpi-card">
+        <h4>Active Doctors</h4>
+        <div class="kpi-value">${activeDoctors}</div>
+      </div>
+    `;
+  } catch (err) {
+    // fallback static values
+    kpiGrid.innerHTML = `
+      <div class="kpi-card">
+        <h4>Today's Appointments</h4>
+        <div class="kpi-value">4</div>
+      </div>
+      <div class="kpi-card">
+        <h4>Upcoming</h4>
+        <div class="kpi-value">12</div>
+      </div>
+      <div class="kpi-card">
+        <h4>Cancellations (month)</h4>
+        <div class="kpi-value">2</div>
+      </div>
+      <div class="kpi-card">
+        <h4>Active Doctors</h4>
+        <div class="kpi-value">8</div>
+      </div>
+    `;
+    console.error('Failed to load KPI data', err);
+  }
 }
 
 let weeklyChart, peakChart;
+let kpiPollInterval = null;
+
+function startKpiPolling(intervalMs = 30000) {
+  if (kpiPollInterval) return;
+  kpiPollInterval = setInterval(() => {
+    loadKPI().catch(() => {});
+  }, intervalMs);
+}
+
+function stopKpiPolling() {
+  if (!kpiPollInterval) return;
+  clearInterval(kpiPollInterval);
+  kpiPollInterval = null;
+}
 
 function initCharts() {
   const weeklyCanvas = document.getElementById('weeklyChart');
@@ -814,9 +916,33 @@ function initQuickActions() {
     });
   }
   if (favBtn) {
-    favBtn.addEventListener('click', () => {
+    // fetch favorites to determine current state
+    (async () => {
+      try {
+        const res = await fetch('/api/doctors/favorites', { headers: authHeader() });
+        if (!res.ok) throw new Error('Not logged in or failed to load favorites');
+        const favs = await res.json();
+        if (!favs || favs.length === 0) {
+          favBtn.classList.add('disabled');
+          favBtn.setAttribute('aria-disabled', 'true');
+          favBtn.title = 'No favorites yet';
+        } else {
+          favBtn.classList.remove('disabled');
+          favBtn.removeAttribute('aria-disabled');
+          favBtn.title = `You have ${favs.length} favorite(s)`;
+        }
+      } catch (err) {
+        favBtn.classList.add('disabled');
+        favBtn.setAttribute('aria-disabled', 'true');
+        favBtn.title = 'Login to access favorites';
+      }
+    })();
+
+    favBtn.addEventListener('click', async () => {
       const favoritesTab = document.querySelector('.dashboard-tabs .tab-btn[data-tab="favorites"]');
-      favoritesTab?.click();
+      if (favoritesTab) return favoritesTab.click();
+      // otherwise navigate to dashboard where favorites are available
+      window.location.href = 'dashboard.html#favorites';
     });
   }
   if (reportsBtn) {
@@ -1250,16 +1376,20 @@ function initWizard() {
         };
 
         await createAppointment(appointmentData);
-        
+
         // Add to recently booked doctors
         addToRecentBookings(wizardState.doctorId, wizardState.doctorName);
-        
+
+        // Button success micro-interaction
+        finalBookBtn.classList.add('success');
+        finalBookBtn.textContent = '✓ Booked!';
         showNotification('Appointment booked successfully!', 'success');
-        setTimeout(() => window.location.href = 'dashboard.html', 1500);
+        setTimeout(() => window.location.href = 'dashboard.html', 800);
       } catch (err) {
         showNotification(err.message || 'Failed to book appointment', 'error');
         finalBookBtn.textContent = 'Confirm Booking →';
         finalBookBtn.disabled = false;
+        finalBookBtn.classList.remove('success');
       }
     });
   }
@@ -1306,6 +1436,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load favorites for Find Doctor page
   await loadFavorites();
 
+  // Inline form validation
+  try { initInlineValidation(); } catch (e) { /* ignore if no form present */ }
+
   // Check if we're on a page that needs the wizard
   const isBookingPage = document.getElementById('step-1');
   if (isBookingPage) {
@@ -1321,6 +1454,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     initPreferencesForm();
     initModals();
     await loadDashboardData();
+    // start KPI polling while on dashboard
+    startKpiPolling(30000);
+  }
+
+  // If there is a KPI grid elsewhere (future pages), ensure polling starts
+  if (document.getElementById('kpi-grid') && !document.querySelector('.dashboard-tabs')) {
+    startKpiPolling(30000);
   }
 });
 
@@ -1332,3 +1472,26 @@ function setMaxDateOfBirth() {
     dobInput.setAttribute('max', today);
   }
 }
+
+function initInlineValidation() {
+  const emailInput = document.getElementById('reg-email') || document.getElementById('profile-email') || document.getElementById('login-email');
+  if (emailInput) {
+    emailInput.addEventListener('input', () => {
+      const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value);
+      emailInput.style.borderColor = isValid ? 'var(--color-success)' : 'var(--color-error)';
+    });
+  }
+
+  const passwordInput = document.getElementById('reg-password') || document.getElementById('login-password');
+  if (passwordInput) {
+    passwordInput.addEventListener('input', () => {
+      const isValid = passwordInput.value.length >= 6;
+      passwordInput.style.borderColor = isValid ? 'var(--color-success)' : 'var(--color-error)';
+    });
+  }
+}
+
+// Clear polling when leaving page
+window.addEventListener('beforeunload', () => {
+  stopKpiPolling();
+});

@@ -21,6 +21,21 @@ const userSchema = new mongoose.Schema({
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' }]
 });
 
+// Role + doctor-specific fields
+userSchema.add({
+  role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' },
+  specialization: { type: String, default: '' },
+  licenseNumber: { type: String, default: '' },
+  qualification: { type: String, default: '' },
+  yearsOfExperience: { type: Number, default: 0 },
+  profilePhoto: { type: String, default: '' },
+  bio: { type: String, default: '' },
+  languages: [{ type: String }],
+  consultationFee: { type: Number, default: 0 },
+  onlineFee: { type: Number, default: 0 },
+  appointmentDuration: { type: Number, default: 30 }
+});
+
 // No next() needed – just an async function
 userSchema.pre('save', async function() {
   if (this.isModified('password')) {
