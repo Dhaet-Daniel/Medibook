@@ -4,9 +4,16 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
+// Existing route imports
 const authRoutes = require('./routes/auth');
-const doctorRoutes = require('./routes/doctors');
+const doctorPublicRoutes = require('./routes/doctors'); // renamed to avoid conflict
 const appointmentRoutes = require('./routes/appointments');
+
+// === Step 4: New imports ===
+const doctorRoutes = require('./routes/doctor');   // doctor-specific routes
+const adminRoutes = require('./routes/admin');
+// Role middleware (adjust the path if your middleware is stored elsewhere)
+const { authorize } = require('./middleware/role'); 
 
 const app = express();
 
@@ -19,10 +26,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/doctors', doctorRoutes);
+app.use('/api/doctors', doctorPublicRoutes);      // keep existing public doctor routes
 app.use('/api/appointments', appointmentRoutes);
 
-// Fallback for client-side routing (must be AFTER API routes)
+// === Step 4: Mount new routes ===
+app.use('/api/doctor', doctorRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Fallback for client-side routing (must be AFTER all API routes)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

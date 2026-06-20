@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="admin-dashboard">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="logo">MediBook <span class="badge">Admin</span></div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="home">🏠 Dashboard</a>
+        <a href="#" class="nav-item" data-page="doctors">👨‍⚕️ Doctors</a>
+        <a href="#" class="nav-item" data-page="patients">👥 Patients</a>
+        <a href="#" class="nav-item" data-page="appointments">📅 Appointments</a>
+        <a href="#" class="nav-item" data-page="analytics">📊 Analytics</a>
+        <a href="#" class="nav-item" data-page="settings">⚙️ Settings</a>
+        <a href="#" class="nav-item" id="logout-admin">🚪 Logout</a>
+      </nav>
+    </aside>
+    <main class="main-content">
+      <header class="top-header"><h2>Admin Dashboard</h2><button id="darkModeToggle">🌙</button></header>
+      <div id="page-container"></div>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

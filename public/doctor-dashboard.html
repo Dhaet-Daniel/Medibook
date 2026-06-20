@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Dashboard – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="doctor-dashboard">
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="logo">MediBook <span class="badge">Doctor</span></div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="home">🏠 Dashboard</a>
+        <a href="#" class="nav-item" data-page="appointments">📅 Appointments</a>
+        <a href="#" class="nav-item" data-page="patients">👥 Patients</a>
+        <a href="#" class="nav-item" data-page="consultations">🩺 Consultations</a>
+        <a href="#" class="nav-item" data-page="prescriptions">💊 Prescriptions</a>
+        <a href="#" class="nav-item" data-page="availability">🕒 Availability</a>
+        <a href="#" class="nav-item" data-page="profile">👤 Profile</a>
+        <a href="#" class="nav-item" id="logout-doctor">🚪 Logout</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <h2>Doctor Dashboard</h2>
+        <div class="header-right">
+          <span id="doctor-name">Dr. Smith</span>
+          <button id="darkModeToggle" class="icon-btn">🌙</button>
+        </div>
+      </header>
+      <div id="page-container"></div>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
