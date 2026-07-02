@@ -1470,3 +1470,353 @@ body.high-contrast button {
     grid-template-columns: 1fr;
   }
 }
+
+
+
+/* ============================================================
+   MODERN ANIMATIONS – Landing Page
+   ============================================================ */
+
+/* 1. Hero gradient animation – subtle movement */
+.hero {
+  background: linear-gradient(135deg, #1A73E8 0%, #0D5CBF 50%, #1A73E8 100%);
+  background-size: 300% 300%;
+  animation: gradientShift 12s ease-in-out infinite;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 2. Entrance animations – fade + slide up */
+.hero-content,
+.feature-card,
+.section-title {
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+}
+.hero-content { animation-delay: 0.1s; }
+.section-title { animation-delay: 0.2s; }
+.feature-card:nth-child(1) { animation-delay: 0.3s; }
+.feature-card:nth-child(2) { animation-delay: 0.4s; }
+.feature-card:nth-child(3) { animation-delay: 0.5s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 3. Floating effect on hero title & subtitle */
+.hero h1 {
+  animation: floatText 6s ease-in-out infinite;
+}
+.hero-subtitle {
+  animation: floatText 6s ease-in-out infinite 0.5s;
+}
+@keyframes floatText {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* 4. Feature card hover – lift, shadow, icon scale */
+.feature-card {
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), 
+              box-shadow 0.4s ease,
+              background 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 20px 40px -12px rgba(0,0,0,0.25);
+  background: var(--bg-surface);
+}
+.feature-card:hover .feature-icon {
+  transform: scale(1.15) rotate(2deg);
+}
+.feature-icon {
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+/* 5. Button micro-interactions */
+.btn {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.2s ease,
+              background 0.2s ease;
+}
+.btn:hover {
+  transform: scale(1.04);
+}
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* 6. Footer link hover – underline slide-in */
+.site-footer a {
+  position: relative;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+}
+.site-footer a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+}
+.site-footer a:hover {
+  color: var(--color-primary);
+}
+.site-footer a:hover::after {
+  width: 100%;
+}
+
+/* 7. Dark mode toggle – spin on hover */
+.theme-toggle {
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.3s ease;
+}
+.theme-toggle:hover {
+  transform: rotate(60deg) scale(1.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+/* 8. Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .hero-content,
+  .feature-card,
+  .section-title,
+  .hero h1,
+  .hero-subtitle,
+  .btn,
+  .theme-toggle,
+  .site-footer a::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hero {
+    background: var(--color-primary); /* fallback static */
+  }
+}
+
+
+
+
+/* ==============================================================
+   GLOBAL ANIMATIONS – Premium UI/UX (all pages)
+   ============================================================== */
+
+/* 1. Base entrance animation (fade + slide up) */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 2. Floating text (gentle hover) */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* 3. Pop-in (confirmation, modals) */
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* 4. Stagger delays (used with fadeUp) */
+.anim-delay-1 { animation-delay: 0.05s; }
+.anim-delay-2 { animation-delay: 0.10s; }
+.anim-delay-3 { animation-delay: 0.15s; }
+.anim-delay-4 { animation-delay: 0.20s; }
+.anim-delay-5 { animation-delay: 0.30s; }
+
+/* ----- Apply animations to existing classes ----- */
+
+/* Hero sections (all .page-hero, .hero) */
+.hero,
+.page-hero {
+  background-size: 300% 300%;
+  animation: gradientShift 14s ease-in-out infinite;
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Hero titles + subtitles – float */
+.hero h1,
+.page-hero h1,
+.hero-subtitle {
+  animation: float 6s ease-in-out infinite;
+}
+.hero-subtitle {
+  animation-delay: 0.3s;
+}
+
+/* All cards: fade-up on load + hover lift */
+.card,
+.feature-card,
+.doctor-card,
+.appointment-card,
+.kpi-card,
+.booking-card,
+.confirmation-card,
+.profile-card,
+.specialty-card,
+.doctor-card-wizard,
+.schedule-item {
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards;
+}
+/* Staggered delays for grids */
+.feature-card:nth-child(1) { animation-delay: 0.05s; }
+.feature-card:nth-child(2) { animation-delay: 0.10s; }
+.feature-card:nth-child(3) { animation-delay: 0.15s; }
+
+.doctor-card:nth-child(1) { animation-delay: 0.05s; }
+.doctor-card:nth-child(2) { animation-delay: 0.10s; }
+.doctor-card:nth-child(3) { animation-delay: 0.15s; }
+.doctor-card:nth-child(4) { animation-delay: 0.20s; }
+
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.10s; }
+.kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.kpi-card:nth-child(4) { animation-delay: 0.20s; }
+
+/* Hover lift for cards */
+.card:hover,
+.feature-card:hover,
+.doctor-card:hover,
+.appointment-card:hover,
+.kpi-card:hover,
+.booking-card:hover,
+.specialty-card:hover,
+.doctor-card-wizard:hover,
+.schedule-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  transition: transform 0.25s cubic-bezier(0.2,0,0,1), box-shadow 0.3s ease;
+}
+/* Buttons micro-interactions */
+.btn {
+  transition: transform 0.2s cubic-bezier(0.2,0,0,1), box-shadow 0.2s ease;
+}
+.btn:hover {
+  transform: scale(1.04);
+}
+.btn:active {
+  transform: scale(0.96);
+}
+
+/* Dashboard tabs – active tab slide effect */
+.dashboard-tabs .tab-btn {
+  transition: color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.dashboard-tabs .tab-btn.active {
+  transform: translateY(-1px);
+}
+
+/* Confirmation card pop-in */
+.confirmation-card {
+  animation: popIn 0.5s cubic-bezier(0.2,0,0,1) forwards;
+}
+
+/* Wizard steps staggered */
+.step-item {
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards;
+}
+.step-item:nth-child(1) { animation-delay: 0.05s; }
+.step-item:nth-child(2) { animation-delay: 0.10s; }
+.step-item:nth-child(3) { animation-delay: 0.15s; }
+.step-item:nth-child(4) { animation-delay: 0.20s; }
+
+/* Sidebar nav items – hover underline */
+.sidebar-nav .nav-item {
+  position: relative;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.sidebar-nav .nav-item::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+.sidebar-nav .nav-item:hover::after,
+.sidebar-nav .nav-item.active::after {
+  width: 100%;
+}
+
+/* Tables – rows fade */
+.data-table tbody tr {
+  opacity: 0;
+  animation: fadeUp 0.4s ease forwards;
+}
+.data-table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.data-table tbody tr:nth-child(2) { animation-delay: 0.10s; }
+.data-table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+.data-table tbody tr:nth-child(4) { animation-delay: 0.20s; }
+
+/* Modals */
+.modal[aria-hidden="false"] .modal-dialog {
+  animation: popIn 0.3s ease forwards;
+}
+
+/* Footer links – underline slide */
+.site-footer a {
+  position: relative;
+  text-decoration: none;
+}
+.site-footer a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transition: width 0.3s ease;
+}
+.site-footer a:hover::after {
+  width: 100%;
+}
+
+/* Theme toggle spin */
+.theme-toggle {
+  transition: transform 0.4s cubic-bezier(0.2,0,0,1), box-shadow 0.3s;
+}
+.theme-toggle:hover {
+  transform: rotate(60deg) scale(1.1);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hero,
+  .page-hero {
+    background: var(--color-primary) !important; /* fallback */
+  }
+}
