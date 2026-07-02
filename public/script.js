@@ -468,7 +468,7 @@ function updateNav() {
         logoutBtn.addEventListener('click', () => {
           localStorage.clear();
           showNotification('Logged out successfully.', 'success');
-          window.location.href = 'index.html';
+          window.location.href = 'login.html';
         });
         logoutBtn.dataset.listener = 'true';
       }
@@ -1499,7 +1499,7 @@ function setupDoctorNavigation() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       localStorage.clear();
-      window.location.href = 'index.html';
+      window.location.href = 'login.html';
     });
   }
 }
@@ -1679,7 +1679,7 @@ function setupAdminNavigation() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       localStorage.clear();
-      window.location.href = 'index.html';
+      window.location.href = 'login.html';
     });
   }
 }

@@ -3,13 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MediBook - Medical Appointment Booking</title>
+  <meta name="description" content="MediBook – Book hospital appointments online quickly and securely. Find specialist doctors and schedule consultations at your convenience.">
+  <meta name="keywords" content="hospital appointments, doctor booking, medical consultations, healthcare">
+  <meta name="author" content="MediBook Hospital">
+  <title>MediBook – Hospital Appointment Booking</title>
   <link rel="stylesheet" href="main.css">
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="index.html" class="logo" aria-label="MediBook Home">
+        <span class="logo-icon" aria-hidden="true">&#9829;</span> MediBook
+      </a>
+      <nav class="main-nav" role="navigation" aria-label="Main navigation">
+        <ul>
+          <!-- Removed Find a Doctor and Book Appointment links -->
+          <li><a href="login.html" class="btn btn-outline">Login</a></li>
+          <li><a href="dashboard.html" id="dashboard-link" style="display:none;">Dashboard</a></li>
+          <li><button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-content container">
+        <h1 id="hero-heading">Your Health, Your Schedule</h1>
+        <p class="hero-subtitle">
+          Book appointments with specialist consultants online—quickly, securely, and on your terms.
+        </p>
+        <div class="hero-actions">
+          <a href="book-appointment.html" class="btn btn-primary btn-lg">Book an Appointment</a>
+          <a href="find-doctor.html" class="btn btn-secondary btn-lg">Find a Doctor</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" aria-labelledby="features-heading">
+      <div class="container">
+        <h2 id="features-heading" class="section-title">Why use MediBook?</h2>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">&#128197;</span>
+            <h3>Fast Booking</h3>
+            <p>Schedule consultations in a few clicks and manage appointments without waiting on hold.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">&#128205;</span>
+            <h3>Trusted Specialists</h3>
+            <p>Search consultants by specialty, location, and availability to find the right care.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon" aria-hidden="true">&#128274;</span>
+            <h3>Secure Records</h3>
+            <p>Enjoy safe, private access to your bookings and profile data with real database storage.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+      <p>&copy; 2026 MediBook Hospital. All rights reserved.</p>
+      <nav aria-label="Footer navigation">
+        <a href="#" onclick="showNotification('Privacy Policy coming soon!', 'info'); return false;">Privacy Policy</a>
+        <span aria-hidden="true">|</span>
+        <a href="#" onclick="showNotification('Accessibility Statement: This site follows WCAG 2.1 AA guidelines.', 'info'); return false;">Accessibility</a>
+        <span aria-hidden="true">|</span>
+        <a href="#" onclick="showNotification('Contact us at support@medibook.hospital', 'info'); return false;">Contact</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- Dark Mode Toggle -->
   <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
     <span class="theme-toggle-icon" aria-hidden="true"></span>
   </button>
+
   <script src="script.js"></script>
 </body>
 </html>
