@@ -314,17 +314,16 @@ async function handleLogin(email, password) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Login failed');
-  localStorage.setItem('token', data.token);
-  localStorage.setItem('userName', `${data.user.firstName} ${data.user.lastName}`);
-  localStorage.setItem('userEmail', data.user.email);
-  localStorage.setItem('userRole', data.user.role);
+  const { token, user } = data;
+  localStorage.setItem('token', token);
+  localStorage.setItem('userRole', user.role);
+  localStorage.setItem('userName', `${user.firstName} ${user.lastName}`);
+  localStorage.setItem('userEmail', user.email);
 
   // ★ Role-based redirection (moved inside handleLogin)
-  const role = data.user.role;
-  let redirectUrl = 'dashboard.html';
-  if (role === 'doctor') redirectUrl = 'doctor-dashboard.html';
-  else if (role === 'admin') redirectUrl = 'admin-dashboard.html';
-  window.location.href = redirectUrl;
+  if (user.role === 'doctor') window.location.href = 'doctor-dashboard.html';
+  else if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
+  else window.location.href = 'dashboard.html';
 
   return data; // will not execute due to redirect
 }
@@ -337,17 +336,16 @@ async function handleRegister(firstName, lastName, email, password, dateOfBirth)
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Registration failed');
-  localStorage.setItem('token', data.token);
-  localStorage.setItem('userName', `${data.user.firstName} ${data.user.lastName}`);
-  localStorage.setItem('userEmail', data.user.email);
-  localStorage.setItem('userRole', data.user.role);
+  const { token, user } = data;
+  localStorage.setItem('token', token);
+  localStorage.setItem('userRole', user.role);
+  localStorage.setItem('userName', `${user.firstName} ${user.lastName}`);
+  localStorage.setItem('userEmail', user.email);
 
   // ★ Role-based redirection (moved inside handleRegister)
-  const role = data.user.role;
-  let redirectUrl = 'dashboard.html';
-  if (role === 'doctor') redirectUrl = 'doctor-dashboard.html';
-  else if (role === 'admin') redirectUrl = 'admin-dashboard.html';
-  window.location.href = redirectUrl;
+  if (user.role === 'doctor') window.location.href = 'doctor-dashboard.html';
+  else if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
+  else window.location.href = 'dashboard.html';
 
   return data; // will not execute due to redirect
 }
