@@ -34,49 +34,42 @@ const doctors = [
   }
 ];
 
-async function upsertSeedUser({ email, password, ...profile }) {
-  let user = await User.findOne({ email });
-
-  if (!user) {
-    user = new User({ email, password, ...profile });
-  } else {
-    Object.assign(user, profile);
-    user.password = password;
-  }
-
-  await user.save();
-  return user;
-}
-
 mongoose.connect(process.env.MONGODB_URI)
   .then(async () => {
     await Doctor.deleteMany();
     await Doctor.insertMany(doctors);
     console.log('Doctors seeded successfully.');
 
-    await upsertSeedUser({
+    let adminUser = await User.findOne({ email: 'admin@medibook.com' });
+    if (!adminUser) adminUser = new User({ email: 'admin@medibook.com' });
+    Object.assign(adminUser, {
       firstName: 'Admin',
       lastName: 'User',
-      email: 'admin@medibook.com',
-      password: 'admin123',
-      dateOfBirth: new Date('1990-01-01'),
-      role: 'admin'
+      password: 'Admin123!',
+      dateOfBirth: new Date('1980-01-01'),
+      role: 'admin',
+      phone: '+1234567890'
     });
-    console.log('Admin user ready: admin@medibook.com / admin123');
+    await adminUser.save();
+    console.log('Admin user ready: admin@medibook.com / Admin123!');
 
-    await upsertSeedUser({
-      firstName: 'Test',
-      lastName: 'Doctor',
-      email: 'doctor@medibook.com',
-      password: 'doctor123',
-      dateOfBirth: new Date('1985-05-15'),
+    let doctorUser = await User.findOne({ email: 'doctor@medibook.com' });
+    if (!doctorUser) doctorUser = new User({ email: 'doctor@medibook.com' });
+    Object.assign(doctorUser, {
+      firstName: 'Samuel',
+      lastName: 'Mbeki',
+      password: 'Doctor123!',
+      dateOfBirth: new Date('1975-05-15'),
       role: 'doctor',
-      specialization: 'General Medicine',
-      licenseNumber: 'DOC-TEST-001',
-      qualification: 'MBBS',
-      yearsOfExperience: 8
+      specialization: 'Dermatology',
+      licenseNumber: 'LIC-12345',
+      qualification: 'MD, Dermatology',
+      yearsOfExperience: 15,
+      phone: '+1234567891',
+      consultationFee: 150
     });
-    console.log('Doctor user ready: doctor@medibook.com / doctor123');
+    await doctorUser.save();
+    console.log('Doctor user ready: doctor@medibook.com / Doctor123!');
 
     process.exit();
   })
