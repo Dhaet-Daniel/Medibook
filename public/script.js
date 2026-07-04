@@ -1639,183 +1639,288 @@ function viewAppointment(id) {
   showNotification('View appointment details', 'info');
 }
 
-// ============================================================
-// ★★★ NEW: ADMIN DASHBOARD FUNCTIONS (Step 8) ★★★
-// ============================================================
+// ========== ADMIN DASHBOARD ==========
+if (document.body.classList.contains('admin-dashboard')) {
+  initAdminDashboard();
+}
 
 async function initAdminDashboard() {
   await loadAdminKPI();
   setupAdminNavigation();
+  setupAddDoctorModal();
   showAdminPage('home');
 }
 
+// --- Load real KPI data ---
 async function loadAdminKPI() {
-  const container = document.getElementById('kpi-grid');
-  if (!container) return;
-  try {
-    const res = await fetch('/api/admin/kpi', { headers: authHeader() });
-    if (!res.ok) throw new Error('Failed to load KPI');
-    const data = await res.json();
-    container.innerHTML = `
-      <div class="kpi-card">Total Doctors: ${data.totalDoctors || 0}</div>
-      <div class="kpi-card">Total Patients: ${data.totalPatients || 0}</div>
-      <div class="kpi-card">Today's Appointments: ${data.todayAppointments || 0}</div>
-      <div class="kpi-card">Monthly Revenue: $${data.revenue || 0}</div>
-    `;
-  } catch (err) {
-    container.innerHTML = `<p class="error-message">${err.message}</p>`;
-  }
+  const res = await fetch('/api/admin/kpi', { headers: authHeader() });
+  const data = await res.json();
+  const html = `
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">👨‍⚕️ Total Doctors</div>
+        <div class="kpi-value">${data.totalDoctors}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">👥 Total Patients</div>
+        <div class="kpi-value">${data.totalPatients}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">📅 Today's Appointments</div>
+        <div class="kpi-value">${data.todayAppointments}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">💰 Monthly Revenue</div>
+        <div class="kpi-value">$${data.revenue}</div>
+      </div>
+    </div>
+  `;
+  // Inject into page container – but we handle it in showAdminPage
+  // We'll keep it in a global var to reuse.
+  window._kpiHTML = html;
 }
 
+// --- Navigation ---
 function setupAdminNavigation() {
-  document.querySelectorAll('.nav-item').forEach(item => {
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
       const page = item.dataset.page;
       if (page) showAdminPage(page);
     });
   });
-  const logoutBtn = document.getElementById('logout-admin');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      localStorage.clear();
-      window.location.href = 'login.html';
-    });
-  }
+  document.getElementById('logout-admin').addEventListener('click', () => {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  });
 }
 
+// --- Page renderer ---
 function showAdminPage(page) {
   const container = document.getElementById('page-container');
-  if (!container) return;
+  // Highlight nav
+  document.querySelectorAll('.sidebar-nav .nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.sidebar-nav .nav-item[data-page="${page}"]`)?.classList.add('active');
+
   if (page === 'home') {
-    container.innerHTML = `<div class="kpi-grid" id="kpi-grid"></div><div class="card"><h3>Platform Overview</h3><p>Charts coming soon</p></div>`;
-    loadAdminKPI();
-  } else if (page === 'doctors') {
-    container.innerHTML = `<div class="card"><h3>Manage Doctors</h3><div id="doctors-table"></div></div>`;
+    container.innerHTML = `
+      <div class="admin-toolbar">
+        <h3>Overview</h3>
+      </div>
+      ${window._kpiHTML || '<p>Loading KPI...</p>'}
+      <div class="card">
+        <h3>Recent Activity</h3>
+        <p>System activity feed coming soon.</p>
+      </div>
+    `;
+    // Re-load KPI if not yet loaded
+    if (!window._kpiHTML) loadAdminKPI();
+  } 
+  else if (page === 'doctors') {
+    container.innerHTML = `
+      <div class="admin-toolbar">
+        <h3>Manage Doctors</h3>
+        <button id="add-doctor-btn" class="btn btn-primary">➕ Add Doctor</button>
+      </div>
+      <div id="doctors-table-container"></div>
+    `;
     loadAdminDoctors();
-  } else if (page === 'patients') {
-    container.innerHTML = `<div class="card"><h3>Manage Patients</h3><div id="patients-table"></div></div>`;
+    // Attach add doctor button
+    document.getElementById('add-doctor-btn')?.addEventListener('click', () => {
+      document.getElementById('add-doctor-modal').setAttribute('aria-hidden', 'false');
+    });
+  } 
+  else if (page === 'patients') {
+    container.innerHTML = `
+      <div class="admin-toolbar"><h3>Manage Patients</h3></div>
+      <div id="patients-table-container"></div>
+    `;
     loadAdminPatients();
-  } else if (page === 'appointments') {
-    container.innerHTML = `<div class="card"><h3>All Appointments</h3><div id="admin-appointments-table"></div></div>`;
+  } 
+  else if (page === 'appointments') {
+    container.innerHTML = `
+      <div class="admin-toolbar"><h3>All Appointments</h3></div>
+      <div id="admin-appointments-container"></div>
+    `;
     loadAdminAppointments();
-  } else if (page === 'analytics') {
-    container.innerHTML = `<div class="card"><h3>Analytics Dashboard</h3><p>Full analytics coming soon</p></div>`;
-  } else if (page === 'settings') {
-    container.innerHTML = `<div class="card"><h3>System Settings</h3><p>Settings panel coming soon</p></div>`;
+  } 
+  else if (page === 'analytics') {
+    container.innerHTML = `
+      <div class="card"><h3>Analytics Dashboard</h3><p>Charts and deep insights coming soon.</p></div>
+    `;
+  } 
+  else if (page === 'settings') {
+    container.innerHTML = `
+      <div class="card"><h3>System Settings</h3><p>Configure platform settings (coming soon).</p></div>
+    `;
   }
-  document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-  const activeNav = document.querySelector(`.nav-item[data-page="${page}"]`);
-  if (activeNav) activeNav.classList.add('active');
 }
 
+// --- Doctor Management ---
 async function loadAdminDoctors() {
-  const container = document.getElementById('doctors-table');
+  const container = document.getElementById('doctors-table-container');
   if (!container) return;
   try {
     const res = await fetch('/api/admin/doctors', { headers: authHeader() });
-    if (!res.ok) throw new Error('Failed to fetch doctors');
     const doctors = await res.json();
     if (!doctors.length) {
-      container.innerHTML = '<p>No doctors found.</p>';
+      container.innerHTML = `<div class="empty-state">No doctors registered yet.</div>`;
       return;
     }
-    container.innerHTML = `<table class="data-table">${doctors.map(d => `
+    const rows = doctors.map(d => `
       <tr>
         <td>${d.firstName} ${d.lastName}</td>
-        <td>${d.specialization || 'N/A'}</td>
+        <td>${d.specialization || '—'}</td>
         <td>${d.email}</td>
-        <td>
-          <button onclick="verifyDoctor('${d._id}')">Verify</button>
-          <button onclick="deleteDoctor('${d._id}')">Delete</button>
+        <td>${d.isVerified ? '✅ Verified' : '⏳ Pending'}</td>
+        <td class="doctor-actions">
+          <button class="btn-sm btn-outline" onclick="toggleVerifyDoctor('${d._id}', ${!d.isVerified})">
+            ${d.isVerified ? 'Unverify' : 'Verify'}
+          </button>
+          <button class="btn-sm btn-outline" onclick="deleteDoctor('${d._id}')">Delete</button>
         </td>
       </tr>
-    `).join('')}</table>`;
+    `).join('');
+    container.innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Specialty</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
   } catch (err) {
-    container.innerHTML = `<p class="error-message">${err.message}</p>`;
+    container.innerHTML = `<p class="error">Failed to load doctors.</p>`;
   }
 }
 
+// --- Toggle verify / unverify ---
+window.toggleVerifyDoctor = async function(id, verify) {
+  try {
+    await fetch(`/api/admin/doctors/${id}/verify`, {
+      method: 'PUT',
+      headers: authHeader(),
+      body: JSON.stringify({ verified: verify })
+    });
+    showNotification(`Doctor ${verify ? 'verified' : 'unverified'}`, 'success');
+    loadAdminDoctors();
+    loadAdminKPI(); // refresh counts
+  } catch (err) {
+    showNotification('Action failed', 'error');
+  }
+};
+
+// --- Delete doctor ---
+window.deleteDoctor = async function(id) {
+  if (!confirm('Delete this doctor permanently?')) return;
+  try {
+    await fetch(`/api/admin/doctors/${id}`, { method: 'DELETE', headers: authHeader() });
+    showNotification('Doctor removed', 'success');
+    loadAdminDoctors();
+    loadAdminKPI();
+  } catch (err) {
+    showNotification('Delete failed', 'error');
+  }
+};
+
+// --- Add Doctor Modal ---
+function setupAddDoctorModal() {
+  const modal = document.getElementById('add-doctor-modal');
+  const closeBtn = document.getElementById('close-add-doctor');
+  const form = document.getElementById('add-doctor-form');
+
+  closeBtn?.addEventListener('click', () => modal.setAttribute('aria-hidden', 'true'));
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) modal.setAttribute('aria-hidden', 'true');
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      firstName: document.getElementById('doc-firstname').value.trim(),
+      lastName: document.getElementById('doc-lastname').value.trim(),
+      email: document.getElementById('doc-email').value.trim(),
+      password: document.getElementById('doc-password').value.trim(),
+      specialization: document.getElementById('doc-specialty').value.trim(),
+      licenseNumber: document.getElementById('doc-license').value.trim()
+    };
+    if (!data.firstName || !data.lastName || !data.email || !data.password) {
+      showNotification('All required fields must be filled', 'error');
+      return;
+    }
+    try {
+      const res = await fetch('/api/admin/doctors', {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to add doctor');
+      }
+      showNotification('Doctor added successfully', 'success');
+      modal.setAttribute('aria-hidden', 'true');
+      form.reset();
+      loadAdminDoctors();
+      loadAdminKPI();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  });
+}
+
+// --- Patients & Appointments (stubs – similar pattern) ---
 async function loadAdminPatients() {
-  const container = document.getElementById('patients-table');
+  const container = document.getElementById('patients-table-container');
   if (!container) return;
   try {
     const res = await fetch('/api/admin/patients', { headers: authHeader() });
-    if (!res.ok) throw new Error('Failed to fetch patients');
     const patients = await res.json();
     if (!patients.length) {
-      container.innerHTML = '<p>No patients found.</p>';
+      container.innerHTML = `<div class="empty-state">No patients registered.</div>`;
       return;
     }
-    container.innerHTML = `<table class="data-table">${patients.map(p => `
-      <tr>
-        <td>${p.firstName} ${p.lastName}</td>
-        <td>${p.email}</td>
-        <td>${p.phone || 'N/A'}</td>
-      </tr>
-    `).join('')}</table>`;
+    const rows = patients.map(p => `
+      <tr><td>${p.firstName} ${p.lastName}</td><td>${p.email}</td><td>${p.phone || '—'}</td></tr>
+    `).join('');
+    container.innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
   } catch (err) {
-    container.innerHTML = `<p class="error-message">${err.message}</p>`;
+    container.innerHTML = `<p class="error">Failed to load patients.</p>`;
   }
 }
 
 async function loadAdminAppointments() {
-  const container = document.getElementById('admin-appointments-table');
+  const container = document.getElementById('admin-appointments-container');
   if (!container) return;
   try {
     const res = await fetch('/api/admin/appointments', { headers: authHeader() });
-    if (!res.ok) throw new Error('Failed to fetch appointments');
     const appointments = await res.json();
     if (!appointments.length) {
-      container.innerHTML = '<p>No appointments found.</p>';
+      container.innerHTML = `<div class="empty-state">No appointments yet.</div>`;
       return;
     }
-    container.innerHTML = `<table class="data-table">${appointments.map(a => `
+    const rows = appointments.map(a => `
       <tr>
         <td>${new Date(a.date).toLocaleDateString()}</td>
         <td>${a.time}</td>
-        <td>${a.user?.firstName || ''} ${a.user?.lastName || ''}</td>
-        <td>${a.doctor?.firstName || ''} ${a.doctor?.lastName || ''}</td>
-        <td>${a.status}</td>
+        <td>${a.user?.firstName || '?'} ${a.user?.lastName || ''}</td>
+        <td>${a.doctor?.firstName || '?'} ${a.doctor?.lastName || ''}</td>
+        <td><span class="status-badge status-badge--${a.status}">${a.status}</span></td>
       </tr>
-    `).join('')}</table>`;
+    `).join('');
+    container.innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
   } catch (err) {
-    container.innerHTML = `<p class="error-message">${err.message}</p>`;
+    container.innerHTML = `<p class="error">Failed to load appointments.</p>`;
   }
 }
-
-async function verifyDoctor(id) {
-  try {
-    const res = await fetch(`/api/admin/doctors/${id}/verify`, { 
-      method: 'PUT', 
-      headers: authHeader() 
-    });
-    if (!res.ok) throw new Error('Verification failed');
-    showNotification('Doctor verified', 'success');
-    await loadAdminDoctors();
-  } catch (err) {
-    showNotification(err.message, 'error');
-  }
-}
-
-async function deleteDoctor(id) {
-  if (!confirm('Delete this doctor?')) return;
-  try {
-    const res = await fetch(`/api/admin/doctors/${id}`, { 
-      method: 'DELETE', 
-      headers: authHeader() 
-    });
-    if (!res.ok) throw new Error('Deletion failed');
-    showNotification('Doctor removed', 'success');
-    await loadAdminDoctors();
-  } catch (err) {
-    showNotification(err.message, 'error');
-  }
-}
-
-// ============================================================
-// ★ END OF NEW FUNCTIONS ★
-// ============================================================
 
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', async () => {
@@ -1827,8 +1932,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateNav();
   if (document.querySelector('.doctor-grid')) {
     initDoctorFilter();
-    initCharts();
-    await loadActivityFeed();
+    // Only initialise charts if the canvas elements exist
+    if (document.getElementById('weeklyChart') && document.getElementById('peakHoursChart')) {
+      initCharts();
+      await loadActivityFeed();
+    }
   }
   setMaxDateOfBirth();
   

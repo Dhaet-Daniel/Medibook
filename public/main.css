@@ -1820,3 +1820,84 @@ body.high-contrast button {
     background: var(--color-primary) !important; /* fallback */
   }
 }
+
+
+
+/* Admin Dashboard – Enhanced Styles */
+
+/* Sidebar icons */
+.sidebar-nav .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  transition: background 0.2s, transform 0.2s;
+}
+.sidebar-nav .nav-item .nav-icon {
+  font-size: 1.2rem;
+  width: 1.8rem;
+  text-align: center;
+}
+.sidebar-nav .nav-item:hover {
+  background: var(--surface-hover);
+  transform: translateX(4px);
+}
+.sidebar-nav .nav-item.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* KPI Cards – Admin */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.kpi-card {
+  background: var(--bg-surface);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.kpi-card .kpi-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+.kpi-card .kpi-value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Doctor table actions */
+.doctor-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.doctor-actions .btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+/* Add Doctor button */
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}

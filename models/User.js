@@ -26,6 +26,7 @@ userSchema.add({
   role: { type: String, enum: ['patient', 'doctor', 'admin'], default: 'patient' },
   specialization: { type: String, default: '' },
   licenseNumber: { type: String, default: '' },
+  isVerified: { type: Boolean, default: false },
   qualification: { type: String, default: '' },
   yearsOfExperience: { type: Number, default: 0 },
   profilePhoto: { type: String, default: '' },

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Find a Doctor – MediBook</title>
   <link rel="stylesheet" href="main.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header class="site-header">
@@ -73,26 +72,6 @@
         <div class="doctor-grid"></div>
       </section>
 
-      <section class="doctor-insights">
-        <h2>Doctor Insights</h2>
-        <div class="charts-row">
-          <div class="card chart-card">
-            <h3>Weekly Appointments</h3>
-            <canvas id="weeklyChart" width="400" height="200"></canvas>
-          </div>
-          <div class="card chart-card">
-            <h3>Peak Booking Times</h3>
-            <canvas id="peakHoursChart" width="400" height="200"></canvas>
-          </div>
-        </div>
-
-        <div class="card activity-feed">
-          <h3>Recent Doctor Activity</h3>
-          <div id="activity-list" class="activity-list">
-            <div class="skeleton">Loading...</div>
-          </div>
-        </div>
-      </section>
     </div>
   </main>
   <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">

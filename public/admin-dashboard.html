@@ -9,23 +9,89 @@
 </head>
 <body class="admin-dashboard">
   <div class="app-layout">
+    <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo">MediBook <span class="badge">Admin</span></div>
+      <div class="logo">
+        MediBook <span class="badge">Admin</span>
+      </div>
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-page="home">🏠 Dashboard</a>
-        <a href="#" class="nav-item" data-page="doctors">👨‍⚕️ Doctors</a>
-        <a href="#" class="nav-item" data-page="patients">👥 Patients</a>
-        <a href="#" class="nav-item" data-page="appointments">📅 Appointments</a>
-        <a href="#" class="nav-item" data-page="analytics">📊 Analytics</a>
-        <a href="#" class="nav-item" data-page="settings">⚙️ Settings</a>
-        <a href="#" class="nav-item" id="logout-admin">🚪 Logout</a>
+        <a href="#" class="nav-item active" data-page="home">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-page="doctors">
+          <span class="nav-icon">👨‍⚕️</span> Doctors
+        </a>
+        <a href="#" class="nav-item" data-page="patients">
+          <span class="nav-icon">👥</span> Patients
+        </a>
+        <a href="#" class="nav-item" data-page="appointments">
+          <span class="nav-icon">📅</span> Appointments
+        </a>
+        <a href="#" class="nav-item" data-page="analytics">
+          <span class="nav-icon">📈</span> Analytics
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <span class="nav-icon">⚙️</span> Settings
+        </a>
+        <a href="#" class="nav-item" id="logout-admin">
+          <span class="nav-icon">🚪</span> Logout
+        </a>
       </nav>
     </aside>
+
+    <!-- Main Content -->
     <main class="main-content">
-      <header class="top-header"><h2>Admin Dashboard</h2><button id="darkModeToggle">🌙</button></header>
-      <div id="page-container"></div>
+      <header class="top-header">
+        <h2>Admin Dashboard</h2>
+        <div class="header-actions">
+          <button id="darkModeToggle" class="icon-btn" aria-label="Toggle dark mode">🌙</button>
+        </div>
+      </header>
+
+      <!-- Dynamic Page Container -->
+      <div id="page-container">
+        <!-- Home page will be rendered here by JS -->
+      </div>
     </main>
   </div>
+
+  <!-- Add Doctor Modal -->
+  <div id="add-doctor-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="add-doctor-title">
+      <h3 id="add-doctor-title">Add New Doctor</h3>
+      <form id="add-doctor-form">
+        <div class="form-group">
+          <label for="doc-firstname">First Name</label>
+          <input type="text" id="doc-firstname" required>
+        </div>
+        <div class="form-group">
+          <label for="doc-lastname">Last Name</label>
+          <input type="text" id="doc-lastname" required>
+        </div>
+        <div class="form-group">
+          <label for="doc-email">Email</label>
+          <input type="email" id="doc-email" required>
+        </div>
+        <div class="form-group">
+          <label for="doc-password">Password</label>
+          <input type="password" id="doc-password" required>
+        </div>
+        <div class="form-group">
+          <label for="doc-specialty">Specialty</label>
+          <input type="text" id="doc-specialty" placeholder="e.g., Cardiology">
+        </div>
+        <div class="form-group">
+          <label for="doc-license">License Number</label>
+          <input type="text" id="doc-license">
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Add Doctor</button>
+          <button type="button" class="btn btn-outline" id="close-add-doctor">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>

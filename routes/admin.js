@@ -25,6 +25,35 @@ router.get('/doctors', async (req, res) => {
   res.json(doctors);
 });
 
+// Add a new doctor
+router.post('/doctors', async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, specialization, licenseNumber } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ error: 'Email already in use' });
+
+    const doctor = new User({
+      firstName,
+      lastName,
+      email,
+      password,
+      role: 'doctor',
+      specialization: specialization || '',
+      licenseNumber: licenseNumber || '',
+      dateOfBirth: new Date('1970-01-01'),
+      phone: ''
+    });
+
+    await doctor.save();
+    res.status(201).json({
+      message: 'Doctor created',
+      doctor: { id: doctor._id, firstName, lastName, email }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Patients list
 router.get('/patients', async (req, res) => {
   const patients = await User.find({ role: 'patient' }).select('-password');
@@ -39,8 +68,9 @@ router.get('/appointments', async (req, res) => {
 
 // Verify doctor
 router.put('/doctors/:id/verify', async (req, res) => {
-  await User.findByIdAndUpdate(req.params.id, { isVerified: true });
-  res.json({ message: 'Doctor verified' });
+  const { verified } = req.body;
+  await User.findByIdAndUpdate(req.params.id, { isVerified: verified });
+  res.json({ message: `Doctor ${verified ? 'verified' : 'unverified'}` });
 });
 
 // Delete doctor
