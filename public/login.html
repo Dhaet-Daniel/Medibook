@@ -8,6 +8,7 @@
 </head>
 <body class="auth-page">
   <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <header class="site-header">
     <div class="header-inner">
       <a href="index.html" class="logo">
@@ -18,61 +19,99 @@
 
   <main id="main-content" class="auth-main">
     <div class="auth-card">
-      <div class="auth-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected="true" class="tab-btn tab-active" id="tab-login" aria-controls="panel-login">Login</button>
-        <button type="button" role="tab" aria-selected="false" class="tab-btn" id="tab-register" aria-controls="panel-register">Register</button>
+      <!-- Decorative top bar -->
+      <div class="auth-decoration">
+        <span class="auth-decoration-dot"></span>
+        <span class="auth-decoration-dot"></span>
+        <span class="auth-decoration-dot"></span>
       </div>
 
+      <div class="auth-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="true" class="tab-btn tab-active" id="tab-login" aria-controls="panel-login">
+          <span class="tab-icon">🔐</span> Sign In
+        </button>
+        <button type="button" role="tab" aria-selected="false" class="tab-btn" id="tab-register" aria-controls="panel-register">
+          <span class="tab-icon">✨</span> Create Account
+        </button>
+      </div>
+
+      <!-- Login Panel -->
       <section id="panel-login" role="tabpanel" aria-labelledby="tab-login">
-        <h1 class="auth-title">Welcome Back</h1>
-        <p class="auth-subtitle">Sign in to manage your appointments.</p>
+        <div class="auth-header">
+          <h1 class="auth-title">Welcome Back</h1>
+          <p class="auth-subtitle">Sign in to manage your appointments and health records.</p>
+        </div>
         <form class="auth-form" novalidate>
-          <div class="form-group">
-            <label for="login-email">Email Address</label>
+          <div class="form-group floating-label">
             <input type="email" id="login-email" required>
+            <label for="login-email">Email Address</label>
           </div>
-          <div class="form-group">
-            <label for="login-password">Password</label>
+          <div class="form-group floating-label">
             <input type="password" id="login-password" required>
+            <label for="login-password">Password</label>
           </div>
-          <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+          <div class="form-options">
+            <label class="checkbox-label">
+              <input type="checkbox" id="remember-me"> Remember me
+            </label>
+            <a href="#" class="forgot-link">Forgot password?</a>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">
+            <span class="btn-text">Sign In</span>
+            <span class="btn-loader" style="display:none;">⏳</span>
+          </button>
         </form>
+        <div class="auth-footer">
+          <p>Don't have an account? <a href="#" id="switch-to-register">Create one now</a></p>
+        </div>
       </section>
 
+      <!-- Register Panel -->
       <section id="panel-register" role="tabpanel" aria-labelledby="tab-register" hidden>
-        <h1 class="auth-title">Create an Account</h1>
-        <p class="auth-subtitle">Register to book appointments online.</p>
+        <div class="auth-header">
+          <h1 class="auth-title">Create an Account</h1>
+          <p class="auth-subtitle">Join MediBook and take control of your healthcare.</p>
+        </div>
         <form class="auth-form" novalidate>
           <div class="form-row">
-            <div class="form-group">
-              <label for="reg-fname">First Name</label>
+            <div class="form-group floating-label">
               <input type="text" id="reg-fname" required>
+              <label for="reg-fname">First Name</label>
             </div>
-            <div class="form-group">
-              <label for="reg-lname">Last Name</label>
+            <div class="form-group floating-label">
               <input type="text" id="reg-lname" required>
+              <label for="reg-lname">Last Name</label>
             </div>
           </div>
-          <div class="form-group">
-            <label for="reg-email">Email Address</label>
+          <div class="form-group floating-label">
             <input type="email" id="reg-email" required>
+            <label for="reg-email">Email Address</label>
           </div>
-          <div class="form-group">
-            <label for="reg-dob">Date of Birth</label>
+          <div class="form-group floating-label">
             <input type="date" id="reg-dob" required>
+            <label for="reg-dob">Date of Birth</label>
           </div>
-          <div class="form-group">
-            <label for="reg-password">Password</label>
+          <div class="form-group floating-label">
             <input type="password" id="reg-password" required>
+            <label for="reg-password">Password</label>
+            <span class="field-hint">Must be at least 6 characters</span>
           </div>
-          <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+          <button type="submit" class="btn btn-primary btn-full">
+            <span class="btn-text">Create Account</span>
+            <span class="btn-loader" style="display:none;">⏳</span>
+          </button>
         </form>
+        <div class="auth-footer">
+          <p>Already have an account? <a href="#" id="switch-to-login">Sign in here</a></p>
+        </div>
       </section>
     </div>
   </main>
+
   <button id="darkModeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
     <span class="theme-toggle-icon" aria-hidden="true"></span>
   </button>
+
   <script src="script.js"></script>
 </body>
 </html>

@@ -1901,3 +1901,224 @@ body.high-contrast button {
   flex-wrap: wrap;
   gap: 1rem;
 }
+
+
+
+/* ==============================================================
+   MODERN AUTH PAGE – UI/UX Pro Max
+   ============================================================== */
+
+.auth-page {
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.auth-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  animation: fadeUp 0.5s ease forwards;
+}
+
+/* Decorative top bar */
+.auth-decoration {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem 0.5rem;
+}
+.auth-decoration-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.auth-decoration-dot:nth-child(1) { background: var(--error); }
+.auth-decoration-dot:nth-child(2) { background: var(--warning); }
+.auth-decoration-dot:nth-child(3) { background: var(--success); }
+
+/* Tabs – modern pill style */
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1.5rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.auth-tabs .tab-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.auth-tabs .tab-btn .tab-icon {
+  font-size: 1.1rem;
+}
+.auth-tabs .tab-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-muted);
+}
+.auth-tabs .tab-btn.tab-active {
+  color: var(--accent);
+  border-bottom: 3px solid var(--accent);
+  background: transparent;
+}
+
+/* Auth header */
+.auth-header {
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+.auth-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+.auth-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+/* Floating label inputs */
+.floating-label {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+.floating-label input {
+  width: 100%;
+  padding: 1rem 1rem 0.5rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.floating-label input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+}
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label {
+  transform: translateY(-0.6rem) scale(0.85);
+  color: var(--accent);
+  font-weight: 600;
+}
+.floating-label label {
+  position: absolute;
+  left: 1rem;
+  top: 0.85rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+  pointer-events: none;
+  transition: transform 0.2s ease, color 0.2s ease, font-size 0.2s ease;
+  transform-origin: left center;
+}
+.floating-label .field-hint {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Form options (remember me + forgot) */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.forgot-link {
+  font-size: 0.9rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+/* Auth footer */
+.auth-footer {
+  padding: 1rem 1.5rem 1.5rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+.auth-footer p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.auth-footer a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Tab switching – smooth transition */
+[role="tabpanel"] {
+  transition: opacity 0.25s ease;
+}
+[role="tabpanel"][hidden] {
+  display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .auth-card {
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  .auth-tabs .tab-btn {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.5rem;
+  }
+  .auth-title {
+    font-size: 1.3rem;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

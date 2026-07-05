@@ -1075,6 +1075,7 @@ async function initDoctorFilter() {
   const clearBtn = document.getElementById('clear-filters');
   const doctorGrid = document.querySelector('.doctor-grid');
   const resultsCount = document.querySelector('.results-count');
+  const locationSelect = document.getElementById('location');
   
   if (!doctorGrid) {
     console.warn('Doctor grid not found - are we on the right page?');
@@ -1087,6 +1088,13 @@ async function initDoctorFilter() {
     showSkeleton(doctorGrid, 3);
     allDoctors = await fetchDoctors();
     renderDoctors(allDoctors);
+
+    // Populate location dropdown dynamically from stored doctors
+    if (locationSelect) {
+      const locations = [...new Set(allDoctors.map(d => d.location).filter(Boolean))].sort();
+      locationSelect.innerHTML = '<option value="">All Locations</option>' +
+        locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+    }
   } catch (err) {
     console.error('Failed to load doctors:', err);
     doctorGrid.innerHTML = '<p class="error">Unable to load doctors. Please refresh the page.</p>';
@@ -1840,6 +1848,7 @@ function setupAddDoctorModal() {
       email: document.getElementById('doc-email').value.trim(),
       password: document.getElementById('doc-password').value.trim(),
       specialization: document.getElementById('doc-specialty').value.trim(),
+      location: document.getElementById('doc-location').value.trim() || 'Main Hospital',
       licenseNumber: document.getElementById('doc-license').value.trim()
     };
     if (!data.firstName || !data.lastName || !data.email || !data.password) {

@@ -25,14 +25,14 @@ router.get('/doctors', async (req, res) => {
   res.json(doctors);
 });
 
-// Add a new doctor
+// Add a new doctor - creates User + Doctor
 router.post('/doctors', async (req, res) => {
   try {
-    const { firstName, lastName, email, password, specialization, licenseNumber } = req.body;
+    const { firstName, lastName, email, password, specialization, licenseNumber, location } = req.body;
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ error: 'Email already in use' });
 
-    const doctor = new User({
+    const user = new User({
       firstName,
       lastName,
       email,
@@ -44,10 +44,22 @@ router.post('/doctors', async (req, res) => {
       phone: ''
     });
 
+    await user.save();
+
+    const doctor = new Doctor({
+      name: `${firstName} ${lastName}`,
+      specialty: specialization || 'General Practice',
+      location: location || 'Main Hospital',
+      rating: 4.5,
+      reviews: 0,
+      nextAvailable: 'Check availability',
+      avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase()
+    });
+
     await doctor.save();
     res.status(201).json({
       message: 'Doctor created',
-      doctor: { id: doctor._id, firstName, lastName, email }
+      doctor: { id: doctor._id, name: doctor.name, specialty: doctor.specialty }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
