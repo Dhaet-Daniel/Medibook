@@ -41,7 +41,7 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: 'Invalid email or password.' });
@@ -52,16 +52,18 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email or password.' });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ 
-      token, 
-      user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone, role: user.role } 
+    // Set token expiry based on rememberMe
+    const expiresIn = rememberMe ? '30d' : '7d';
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn });
+
+    res.json({
+      token,
+      user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone, role: user.role }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 // Get current user profile
 router.get('/me', auth, async (req, res) => {
   try {

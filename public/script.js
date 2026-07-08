@@ -306,11 +306,11 @@ async function loadRecentDoctors() {
 // ========== END PERSONALIZATION & PREFERENCES ==========
 
 // Auth API calls
-async function handleLogin(email, password) {
+async function handleLogin(email, password, rememberMe) {
   const res = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password, rememberMe })
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Login failed');
@@ -411,12 +411,13 @@ function initLoginForm() {
     e.preventDefault();
     const email = loginForm.querySelector('#login-email').value;
     const password = loginForm.querySelector('#login-password').value;
+    const rememberMe = loginForm.querySelector('#remember-me').checked;
     const submitBtn = loginForm.querySelector('button[type="submit"]');
     submitBtn.textContent = 'Logging in...';
     submitBtn.disabled = true;
     try {
+      await handleLogin(email, password, rememberMe); // redirect handled inside
       showNotification('Login successful! Redirecting...', 'success');
-      await handleLogin(email, password); // redirect handled inside
     } catch (err) {
       showNotification(err.message, 'error');
       submitBtn.textContent = 'Sign In';
