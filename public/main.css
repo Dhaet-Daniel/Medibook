@@ -153,7 +153,14 @@ h1, h2, h3 {
   text-decoration: none; display: flex; align-items: center; gap: 8px;
 }
 .logo-icon { color: #E53935; font-size: 1.2rem; }
-.main-nav ul { list-style: none; display: flex; gap: 8px; align-items: center; }
+.main-nav ul {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 .main-nav a {
   text-decoration: none; color: var(--color-text); font-weight: 500;
   padding: 6px 12px; border-radius: var(--radius-sm);

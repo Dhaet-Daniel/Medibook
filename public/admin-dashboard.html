@@ -96,6 +96,76 @@
     </div>
   </div>
 
+  <!-- Edit Doctor Modal -->
+  <div id="edit-doctor-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-doctor-title">
+      <h3 id="edit-doctor-title">Edit Doctor</h3>
+      <form id="edit-doctor-form">
+        <input type="hidden" id="edit-doctor-id">
+        <div class="form-group">
+          <label for="edit-firstname">First Name</label>
+          <input type="text" id="edit-firstname" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-lastname">Last Name</label>
+          <input type="text" id="edit-lastname" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-email">Email</label>
+          <input type="email" id="edit-email" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-specialty">Specialty</label>
+          <input type="text" id="edit-specialty" placeholder="e.g., Cardiology">
+        </div>
+        <div class="form-group">
+          <label for="edit-license">License Number</label>
+          <input type="text" id="edit-license">
+        </div>
+        <div class="form-group">
+          <label for="edit-location">Location</label>
+          <input type="text" id="edit-location" placeholder="e.g., Main Hospital">
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Update Doctor</button>
+          <button type="button" class="btn btn-outline" id="close-edit-doctor">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Appointment Modal -->
+  <div id="edit-appointment-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-appointment-title">
+      <h3 id="edit-appointment-title">Edit Appointment</h3>
+      <form id="edit-appointment-form">
+        <input type="hidden" id="edit-appointment-id">
+        <div class="form-group">
+          <label for="edit-appt-status">Status</label>
+          <select id="edit-appt-status">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="rescheduled">Rescheduled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-appt-date">New Date</label>
+          <input type="date" id="edit-appt-date">
+        </div>
+        <div class="form-group">
+          <label for="edit-appt-time">New Time</label>
+          <input type="time" id="edit-appt-time">
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Update Appointment</button>
+          <button type="button" class="btn btn-outline" id="close-edit-appointment">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>

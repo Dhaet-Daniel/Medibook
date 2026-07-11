@@ -1542,7 +1542,7 @@ function showDoctorPage(page) {
     loadAvailabilityCalendar();
   } else if (page === 'profile') {
     container.innerHTML = `<div class="card"><h3>Doctor Profile</h3><form id="doctor-profile-form">...</form></div>`;
-    loadDoctorProfileForm();
+    loadDoctorProfileForm();   
   }
   // highlight nav
   document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
@@ -1657,6 +1657,8 @@ async function initAdminDashboard() {
   await loadAdminKPI();
   setupAdminNavigation();
   setupAddDoctorModal();
+  setupEditDoctorModal();
+  setupEditAppointmentModal();
   showAdminPage('home');
 }
 
@@ -1783,6 +1785,7 @@ async function loadAdminDoctors() {
         <td>${d.email}</td>
         <td>${d.isVerified ? '✅ Verified' : '⏳ Pending'}</td>
         <td class="doctor-actions">
+          <button class="btn-sm btn-outline" onclick="openEditDoctor('${d._id}')">✏️ Edit</button>
           <button class="btn-sm btn-outline" onclick="toggleVerifyDoctor('${d._id}', ${!d.isVerified})">
             ${d.isVerified ? 'Unverify' : 'Verify'}
           </button>
@@ -1830,6 +1833,27 @@ window.deleteDoctor = async function(id) {
   }
 };
 
+// --- Open Edit Doctor Modal ---
+window.openEditDoctor = async function(id) {
+  try {
+    const res = await fetch(`/api/admin/doctors/${id}`, { headers: authHeader() });
+    if (!res.ok) throw new Error('Failed to fetch doctor');
+    const doc = await res.json();
+
+    document.getElementById('edit-doctor-id').value = doc._id;
+    document.getElementById('edit-firstname').value = doc.firstName || '';
+    document.getElementById('edit-lastname').value = doc.lastName || '';
+    document.getElementById('edit-email').value = doc.email || '';
+    document.getElementById('edit-specialty').value = doc.specialization || '';
+    document.getElementById('edit-license').value = doc.licenseNumber || '';
+    document.getElementById('edit-location').value = doc.location || '';
+
+    document.getElementById('edit-doctor-modal').setAttribute('aria-hidden', 'false');
+  } catch (err) {
+    showNotification(err.message, 'error');
+  }
+};
+
 // --- Add Doctor Modal ---
 function setupAddDoctorModal() {
   const modal = document.getElementById('add-doctor-modal');
@@ -1867,6 +1891,49 @@ function setupAddDoctorModal() {
         throw new Error(err.error || 'Failed to add doctor');
       }
       showNotification('Doctor added successfully', 'success');
+      modal.setAttribute('aria-hidden', 'true');
+      form.reset();
+      loadAdminDoctors();
+      loadAdminKPI();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  });
+}
+
+// --- Edit Doctor Modal ---
+function setupEditDoctorModal() {
+  const modal = document.getElementById('edit-doctor-modal');
+  const closeBtn = document.getElementById('close-edit-doctor');
+  const form = document.getElementById('edit-doctor-form');
+
+  closeBtn?.addEventListener('click', () => modal.setAttribute('aria-hidden', 'true'));
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) modal.setAttribute('aria-hidden', 'true');
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-doctor-id').value;
+    const data = {
+      firstName: document.getElementById('edit-firstname').value.trim(),
+      lastName: document.getElementById('edit-lastname').value.trim(),
+      email: document.getElementById('edit-email').value.trim(),
+      specialization: document.getElementById('edit-specialty').value.trim(),
+      licenseNumber: document.getElementById('edit-license').value.trim(),
+      location: document.getElementById('edit-location').value.trim()
+    };
+    try {
+      const res = await fetch(`/api/admin/doctors/${id}`, {
+        method: 'PUT',
+        headers: authHeader(),
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Update failed');
+      }
+      showNotification('Doctor updated successfully', 'success');
       modal.setAttribute('aria-hidden', 'true');
       form.reset();
       loadAdminDoctors();
@@ -1919,11 +1986,15 @@ async function loadAdminAppointments() {
         <td>${a.user?.firstName || '?'} ${a.user?.lastName || ''}</td>
         <td>${a.doctor?.firstName || '?'} ${a.doctor?.lastName || ''}</td>
         <td><span class="status-badge status-badge--${a.status}">${a.status}</span></td>
+        <td class="doctor-actions">
+          <button class="btn-sm btn-outline" onclick="openEditAppointment('${a._id}')">✏️ Edit</button>
+          <button class="btn-sm btn-outline" onclick="deleteAppointment('${a._id}')">🗑️ Delete</button>
+        </td>
       </tr>
     `).join('');
     container.innerHTML = `
       <table class="data-table">
-        <thead><tr><th>Date</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+        <thead><tr><th>Date</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
@@ -1931,6 +2002,79 @@ async function loadAdminAppointments() {
     container.innerHTML = `<p class="error">Failed to load appointments.</p>`;
   }
 }
+
+// --- Open Edit Appointment Modal ---
+window.openEditAppointment = async function(id) {
+  try {
+    const res = await fetch(`/api/admin/appointments/${id}`, { headers: authHeader() });
+    if (!res.ok) throw new Error('Failed to load appointment');
+    const appt = await res.json();
+
+    document.getElementById('edit-appointment-id').value = appt._id;
+    document.getElementById('edit-appt-status').value = appt.status || 'pending';
+    const dateObj = new Date(appt.date);
+    document.getElementById('edit-appt-date').value = dateObj.toISOString().split('T')[0];
+    document.getElementById('edit-appt-time').value = appt.time || '';
+
+    document.getElementById('edit-appointment-modal').setAttribute('aria-hidden', 'false');
+  } catch (err) {
+    showNotification(err.message, 'error');
+  }
+};
+
+// --- Setup Edit Appointment Modal ---
+function setupEditAppointmentModal() {
+  const modal = document.getElementById('edit-appointment-modal');
+  const closeBtn = document.getElementById('close-edit-appointment');
+  const form = document.getElementById('edit-appointment-form');
+
+  closeBtn?.addEventListener('click', () => modal.setAttribute('aria-hidden', 'true'));
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) modal.setAttribute('aria-hidden', 'true');
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-appointment-id').value;
+    const data = {
+      status: document.getElementById('edit-appt-status').value,
+      date: document.getElementById('edit-appt-date').value,
+      time: document.getElementById('edit-appt-time').value
+    };
+    try {
+      const res = await fetch(`/api/admin/appointments/${id}`, {
+        method: 'PUT',
+        headers: authHeader(),
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Update failed');
+      }
+      showNotification('Appointment updated', 'success');
+      modal.setAttribute('aria-hidden', 'true');
+      form.reset();
+      loadAdminAppointments();
+      loadAdminKPI();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  });
+}
+
+// --- Delete Appointment ---
+window.deleteAppointment = async function(id) {
+  if (!confirm('Delete this appointment permanently?')) return;
+  try {
+    const res = await fetch(`/api/admin/appointments/${id}`, { method: 'DELETE', headers: authHeader() });
+    if (!res.ok) throw new Error('Delete failed');
+    showNotification('Appointment deleted', 'success');
+    loadAdminAppointments();
+    loadAdminKPI();
+  } catch (err) {
+    showNotification(err.message, 'error');
+  }
+};
 
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', async () => {

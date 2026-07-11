@@ -78,6 +78,52 @@ router.get('/appointments', async (req, res) => {
   res.json(appointments);
 });
 
+// Get single doctor (for edit modal)
+router.get('/doctors/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'Doctor not found' });
+    // Also get location from Doctor document
+    const doctor = await Doctor.findOne({ name: { $regex: new RegExp(`^${user.firstName} ${user.lastName}$`, 'i') } });
+    res.json({
+      ...user.toObject(),
+      location: doctor?.location || ''
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update doctor (PUT)
+router.put('/doctors/:id', async (req, res) => {
+  try {
+    const { firstName, lastName, email, specialization, licenseNumber, location } = req.body;
+    // Update User
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Doctor not found' });
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.specialization = specialization || user.specialization;
+    user.licenseNumber = licenseNumber || user.licenseNumber;
+    await user.save();
+
+    // Update Doctor document (for patient view)
+    const doctor = await Doctor.findOne({ name: { $regex: new RegExp(`^${user.firstName} ${user.lastName}$`, 'i') } });
+    if (doctor) {
+      doctor.name = `${firstName} ${lastName}`;
+      doctor.specialty = specialization || doctor.specialty;
+      doctor.location = location || doctor.location;
+      doctor.avatarInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+      await doctor.save();
+    }
+
+    res.json({ message: 'Doctor updated', doctor: user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Verify doctor
 router.put('/doctors/:id/verify', async (req, res) => {
   const { verified } = req.body;
@@ -89,6 +135,46 @@ router.put('/doctors/:id/verify', async (req, res) => {
 router.delete('/doctors/:id', async (req, res) => {
   await User.findByIdAndDelete(req.params.id);
   res.json({ message: 'Doctor removed' });
+});
+
+// Get single appointment
+router.get('/appointments/:id', async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id)
+      .populate('user doctor', 'firstName lastName email');
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+    res.json(appointment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update appointment (status + date/time)
+router.put('/appointments/:id', async (req, res) => {
+  try {
+    const { status, date, time } = req.body;
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+
+    if (status) appointment.status = status;
+    if (date) appointment.date = new Date(date);
+    if (time) appointment.time = time;
+
+    await appointment.save();
+    res.json({ message: 'Appointment updated', appointment });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete appointment
+router.delete('/appointments/:id', async (req, res) => {
+  try {
+    await Appointment.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Appointment deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
