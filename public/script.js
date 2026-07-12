@@ -1659,6 +1659,8 @@ async function initAdminDashboard() {
   setupAddDoctorModal();
   setupEditDoctorModal();
   setupEditAppointmentModal();
+  setupAddPatientModal();
+  setupEditPatientModal();
   showAdminPage('home');
 }
 
@@ -1743,10 +1745,16 @@ function showAdminPage(page) {
   } 
   else if (page === 'patients') {
     container.innerHTML = `
-      <div class="admin-toolbar"><h3>Manage Patients</h3></div>
+      <div class="admin-toolbar">
+        <h3>Manage Patients</h3>
+        <button id="add-patient-btn" class="btn btn-primary">➕ Add Patient</button>
+      </div>
       <div id="patients-table-container"></div>
     `;
     loadAdminPatients();
+    document.getElementById('add-patient-btn')?.addEventListener('click', () => {
+      document.getElementById('add-patient-modal').setAttribute('aria-hidden', 'false');
+    });
   } 
   else if (page === 'appointments') {
     container.innerHTML = `
@@ -1956,17 +1964,143 @@ async function loadAdminPatients() {
       return;
     }
     const rows = patients.map(p => `
-      <tr><td>${p.firstName} ${p.lastName}</td><td>${p.email}</td><td>${p.phone || '—'}</td></tr>
+      <tr>
+        <td>${p.firstName} ${p.lastName}</td>
+        <td>${p.email}</td>
+        <td>${p.phone || '—'}</td>
+        <td class="doctor-actions">
+          <button class="btn-sm btn-outline" onclick="openEditPatient('${p._id}')">✏️ Edit</button>
+          <button class="btn-sm btn-outline" onclick="deletePatient('${p._id}')">🗑️ Delete</button>
+        </td>
+      </tr>
     `).join('');
     container.innerHTML = `
       <table class="data-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
   } catch (err) {
     container.innerHTML = `<p class="error">Failed to load patients.</p>`;
   }
+}
+
+window.openEditPatient = async function(id) {
+  try {
+    const res = await fetch(`/api/admin/patients/${id}`, { headers: authHeader() });
+    if (!res.ok) throw new Error('Failed to load patient');
+    const patient = await res.json();
+
+    document.getElementById('edit-patient-id').value = patient._id;
+    document.getElementById('edit-patient-firstname').value = patient.firstName || '';
+    document.getElementById('edit-patient-lastname').value = patient.lastName || '';
+    document.getElementById('edit-patient-email').value = patient.email || '';
+    document.getElementById('edit-patient-phone').value = patient.phone || '';
+    document.getElementById('edit-patient-dob').value = patient.dateOfBirth ? new Date(patient.dateOfBirth).toISOString().split('T')[0] : '';
+
+    document.getElementById('edit-patient-modal').setAttribute('aria-hidden', 'false');
+  } catch (err) {
+    showNotification(err.message, 'error');
+  }
+};
+
+window.deletePatient = async function(id) {
+  if (!confirm('Delete this patient permanently?')) return;
+  try {
+    const res = await fetch(`/api/admin/patients/${id}`, { method: 'DELETE', headers: authHeader() });
+    if (!res.ok) throw new Error('Delete failed');
+    showNotification('Patient deleted', 'success');
+    loadAdminPatients();
+    loadAdminKPI();
+  } catch (err) {
+    showNotification(err.message, 'error');
+  }
+};
+
+function setupEditPatientModal() {
+  const modal = document.getElementById('edit-patient-modal');
+  const closeBtn = document.getElementById('close-edit-patient');
+  const form = document.getElementById('edit-patient-form');
+
+  closeBtn?.addEventListener('click', () => modal.setAttribute('aria-hidden', 'true'));
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) modal.setAttribute('aria-hidden', 'true');
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-patient-id').value;
+    const data = {
+      firstName: document.getElementById('edit-patient-firstname').value.trim(),
+      lastName: document.getElementById('edit-patient-lastname').value.trim(),
+      email: document.getElementById('edit-patient-email').value.trim(),
+      phone: document.getElementById('edit-patient-phone').value.trim(),
+      dateOfBirth: document.getElementById('edit-patient-dob').value
+    };
+
+    try {
+      const res = await fetch(`/api/admin/patients/${id}`, {
+        method: 'PUT',
+        headers: authHeader(),
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Update failed');
+      }
+      showNotification('Patient updated successfully', 'success');
+      modal.setAttribute('aria-hidden', 'true');
+      loadAdminPatients();
+      loadAdminKPI();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  });
+}
+
+function setupAddPatientModal() {
+  const modal = document.getElementById('add-patient-modal');
+  const closeBtn = document.getElementById('close-add-patient');
+  const form = document.getElementById('add-patient-form');
+
+  closeBtn?.addEventListener('click', () => modal.setAttribute('aria-hidden', 'true'));
+  modal?.addEventListener('click', (e) => {
+    if (e.target === modal) modal.setAttribute('aria-hidden', 'true');
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      firstName: document.getElementById('add-patient-firstname').value.trim(),
+      lastName: document.getElementById('add-patient-lastname').value.trim(),
+      email: document.getElementById('add-patient-email').value.trim(),
+      password: document.getElementById('add-patient-password').value.trim(),
+      phone: document.getElementById('add-patient-phone').value.trim(),
+      dateOfBirth: document.getElementById('add-patient-dob').value
+    };
+    if (!data.firstName || !data.lastName || !data.email || !data.password) {
+      showNotification('All required fields must be filled', 'error');
+      return;
+    }
+    try {
+      const res = await fetch('/api/admin/patients', {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to add patient');
+      }
+      showNotification('Patient added successfully', 'success');
+      modal.setAttribute('aria-hidden', 'true');
+      form.reset();
+      loadAdminPatients();
+      loadAdminKPI();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  });
 }
 
 async function loadAdminAppointments() {

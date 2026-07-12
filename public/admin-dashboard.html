@@ -166,6 +166,77 @@
     </div>
   </div>
 
+  <!-- Edit Patient Modal -->
+  <div id="edit-patient-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-patient-title">
+      <h3 id="edit-patient-title">Edit Patient</h3>
+      <form id="edit-patient-form">
+        <input type="hidden" id="edit-patient-id">
+        <div class="form-group">
+          <label for="edit-patient-firstname">First Name</label>
+          <input type="text" id="edit-patient-firstname" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-patient-lastname">Last Name</label>
+          <input type="text" id="edit-patient-lastname" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-patient-email">Email</label>
+          <input type="email" id="edit-patient-email" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-patient-phone">Phone</label>
+          <input type="text" id="edit-patient-phone">
+        </div>
+        <div class="form-group">
+          <label for="edit-patient-dob">Date of Birth</label>
+          <input type="date" id="edit-patient-dob">
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Update Patient</button>
+          <button type="button" class="btn btn-outline" id="close-edit-patient">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Patient Modal -->
+  <div id="add-patient-modal" class="modal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="add-patient-title">
+      <h3 id="add-patient-title">Add New Patient</h3>
+      <form id="add-patient-form">
+        <div class="form-group">
+          <label for="add-patient-firstname">First Name</label>
+          <input type="text" id="add-patient-firstname" required>
+        </div>
+        <div class="form-group">
+          <label for="add-patient-lastname">Last Name</label>
+          <input type="text" id="add-patient-lastname" required>
+        </div>
+        <div class="form-group">
+          <label for="add-patient-email">Email</label>
+          <input type="email" id="add-patient-email" required>
+        </div>
+        <div class="form-group">
+          <label for="add-patient-password">Password</label>
+          <input type="password" id="add-patient-password" required>
+        </div>
+        <div class="form-group">
+          <label for="add-patient-phone">Phone</label>
+          <input type="text" id="add-patient-phone">
+        </div>
+        <div class="form-group">
+          <label for="add-patient-dob">Date of Birth</label>
+          <input type="date" id="add-patient-dob">
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="btn btn-primary">Add Patient</button>
+          <button type="button" class="btn btn-outline" id="close-add-patient">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
