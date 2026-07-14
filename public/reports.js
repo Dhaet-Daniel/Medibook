@@ -32,6 +32,7 @@ function initAppointmentsFilter() {
   document.getElementById('apply-filters').addEventListener('click', applyFilters);
   document.getElementById('clear-filters').addEventListener('click', clearFilters);
   document.getElementById('export-csv').addEventListener('click', exportCSV);
+  document.getElementById('export-pdf').addEventListener('click', generatePDF);
 }
 
 async function loadAppointments() {
@@ -135,6 +136,128 @@ function exportCSV() {
   link.download = `appointments_${new Date().toISOString().slice(0,10)}.csv`;
   link.click();
   URL.revokeObjectURL(link.href);
+}
+
+async function generatePDF() {
+  const btn = document.getElementById('export-pdf');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating...';
+  btn.classList.add('loading');
+
+  try {
+    const userRes = await fetch('/api/auth/me', { headers: authHeader() });
+    const user = await userRes.json();
+
+    document.getElementById('pdf-patient-name').textContent = `${user.firstName} ${user.lastName}`;
+    document.getElementById('pdf-patient-email').textContent = user.email;
+    document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('en-GB', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    const apptContainer = document.getElementById('pdf-appointments-table');
+    if (filteredAppointments.length) {
+      const rows = filteredAppointments.map(a => `
+        <tr>
+          <td>${new Date(a.date).toLocaleDateString()}</td>
+          <td>${a.doctorName}</td>
+          <td>${a.time}</td>
+          <td>${a.status}</td>
+          <td>${a.reason || '—'}</td>
+        </tr>
+      `).join('');
+      apptContainer.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th style="border:1px solid #ddd; padding:8px;">Date</th>
+              <th style="border:1px solid #ddd; padding:8px;">Doctor</th>
+              <th style="border:1px solid #ddd; padding:8px;">Time</th>
+              <th style="border:1px solid #ddd; padding:8px;">Status</th>
+              <th style="border:1px solid #ddd; padding:8px;">Reason</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    } else {
+      apptContainer.innerHTML = '<p>No appointments found.</p>';
+    }
+
+    const prescContainer = document.getElementById('pdf-prescriptions-list');
+    const prescRes = await fetch('/api/prescriptions', { headers: authHeader() });
+    const prescriptions = await prescRes.json();
+    if (prescriptions.length) {
+      prescContainer.innerHTML = prescriptions.map(p => `
+        <div style="border-bottom:1px solid #e2e8f0; padding:6px 0;">
+          <strong>${p.medication}</strong> – ${p.dosage} (${p.doctorName})<br>
+          <span style="font-size:0.85rem; color:#475569;">${new Date(p.date).toLocaleDateString()} – ${p.instructions || ''}</span>
+        </div>
+      `).join('');
+    } else {
+      prescContainer.innerHTML = '<p>No prescriptions available.</p>';
+    }
+
+    const medicalContainer = document.getElementById('pdf-medical-summary');
+    const medRes = await fetch('/api/patient/medical-summary', { headers: authHeader() });
+    const medData = await medRes.json();
+    medicalContainer.innerHTML = `
+      <p><strong>Blood Type:</strong> ${medData.bloodType || 'Not set'}</p>
+      <p><strong>Allergies:</strong> ${medData.allergies || 'None'}</p>
+      <p><strong>Conditions:</strong> ${medData.conditions || 'None'}</p>
+      <p><strong>Recent Diagnoses:</strong> ${medData.diagnoses || 'None'}</p>
+    `;
+
+    const billingContainer = document.getElementById('pdf-billing-list');
+    const billRes = await fetch('/api/billing/invoices', { headers: authHeader() });
+    const invoices = await billRes.json();
+    if (invoices.length) {
+      const rows = invoices.map(inv => `
+        <tr>
+          <td style="border:1px solid #ddd; padding:8px;">${inv.invoiceNumber}</td>
+          <td style="border:1px solid #ddd; padding:8px;">${new Date(inv.date).toLocaleDateString()}</td>
+          <td style="border:1px solid #ddd; padding:8px;">$${inv.amount.toFixed(2)}</td>
+          <td style="border:1px solid #ddd; padding:8px;">${inv.status}</td>
+          <td style="border:1px solid #ddd; padding:8px;">${inv.description}</td>
+        </tr>
+      `).join('');
+      billingContainer.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+          <thead>
+            <tr style="background:#f1f5f9;">
+              <th style="border:1px solid #ddd; padding:8px;">Invoice #</th>
+              <th style="border:1px solid #ddd; padding:8px;">Date</th>
+              <th style="border:1px solid #ddd; padding:8px;">Amount</th>
+              <th style="border:1px solid #ddd; padding:8px;">Status</th>
+              <th style="border:1px solid #ddd; padding:8px;">Description</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    } else {
+      billingContainer.innerHTML = '<p>No invoices found.</p>';
+    }
+
+    const pdfElement = document.getElementById('pdf-content');
+    pdfElement.style.display = 'block';
+
+    const opt = {
+      margin: 0.5,
+      filename: `MediBook_Health_Report_${new Date().toISOString().slice(0,10)}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    await html2pdf().from(pdfElement).set(opt).save();
+
+    pdfElement.style.display = 'none';
+  } catch (err) {
+    showNotification('Failed to generate PDF: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📄 Download PDF Report';
+    btn.classList.remove('loading');
+  }
 }
 
 // ---------- PRESCRIPTIONS ----------
