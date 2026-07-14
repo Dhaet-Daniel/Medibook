@@ -12,6 +12,7 @@ const appointmentRoutes = require('./routes/appointments');
 // === Step 4: New imports ===
 const doctorRoutes = require('./routes/doctor');   // doctor-specific routes
 const adminRoutes = require('./routes/admin');
+const patientRoutes = require('./routes/patient');
 // Role middleware (adjust the path if your middleware is stored elsewhere)
 const { authorize } = require('./middleware/role'); 
 
@@ -32,6 +33,7 @@ app.use('/api/appointments', appointmentRoutes);
 // === Step 4: Mount new routes ===
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', patientRoutes);
 
 // Fallback for client-side routing (must be AFTER all API routes)
 app.get('*', (req, res) => {

@@ -18,7 +18,13 @@ const userSchema = new mongoose.Schema({
   },
   
   // Favorite doctors
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' }]
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' }],
+
+  // Medical summary
+  bloodType: { type: String, default: '' },
+  allergies: { type: String, default: '' },
+  conditions: { type: String, default: '' },
+  diagnoses: { type: String, default: '' }
 });
 
 // Role + doctor-specific fields

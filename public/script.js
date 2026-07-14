@@ -962,7 +962,7 @@ function initQuickActions() {
   }
   if (reportsBtn) {
     reportsBtn.addEventListener('click', () => {
-      showNotification('Reports coming soon!', 'info');
+      window.location.href = 'patient-reports.html';
     });
   }
 }

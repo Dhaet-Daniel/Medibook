@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports – MediBook</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="patient-reports-page">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="index.html" class="logo">MediBook</a>
+      <nav class="main-nav" role="navigation">
+        <ul>
+          <li><a href="find-doctor.html">Find a Doctor</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="login.html" class="btn btn-outline" id="login-nav">Login</a></li>
+          <li><button id="logout-btn" class="btn btn-outline" style="display:none;">Logout</button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="page-hero page-hero--blue">
+      <div class="container">
+        <h1>📊 My Reports</h1>
+        <p>View your appointment history, prescriptions, medical summary, and billing.</p>
+      </div>
+    </div>
+
+    <div class="container reports-container">
+      <!-- Tabs -->
+      <div class="reports-tabs">
+        <button class="tab-btn active" data-tab="appointments">📅 Appointments</button>
+        <button class="tab-btn" data-tab="prescriptions">💊 Prescriptions</button>
+        <button class="tab-btn" data-tab="medical">🏥 Medical Summary</button>
+        <button class="tab-btn" data-tab="billing">💰 Billing</button>
+      </div>
+
+      <!-- Appointment History Tab -->
+      <div id="appointments-tab" class="tab-content active">
+        <div class="reports-toolbar">
+          <h2>Appointment History</h2>
+          <button id="export-csv" class="btn btn-outline">📥 Export CSV</button>
+        </div>
+        <div class="filters-bar">
+          <div class="form-group">
+            <label>From</label>
+            <input type="date" id="filter-from">
+          </div>
+          <div class="form-group">
+            <label>To</label>
+            <input type="date" id="filter-to">
+          </div>
+          <div class="form-group">
+            <label>Doctor</label>
+            <select id="filter-doctor"><option value="">All</option></select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="filter-status">
+              <option value="">All</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <button id="apply-filters" class="btn btn-primary">Apply</button>
+          <button id="clear-filters" class="btn btn-outline">Clear</button>
+        </div>
+        <div id="appointments-table-container">
+          <div class="skeleton" style="height: 200px;"></div>
+        </div>
+        <div id="appointments-summary" class="summary-cards">
+          <div class="summary-card"><span>Total</span><strong id="total-appts">0</strong></div>
+          <div class="summary-card"><span>Upcoming</span><strong id="upcoming-appts">0</strong></div>
+          <div class="summary-card"><span>Completed</span><strong id="completed-appts">0</strong></div>
+          <div class="summary-card"><span>Cancelled</span><strong id="cancelled-appts">0</strong></div>
+        </div>
+      </div>
+
+      <!-- Prescriptions Tab -->
+      <div id="prescriptions-tab" class="tab-content">
+        <h2>💊 Prescriptions</h2>
+        <div id="prescriptions-list">
+          <div class="skeleton" style="height: 100px;"></div>
+        </div>
+      </div>
+
+      <!-- Medical Summary Tab -->
+      <div id="medical-tab" class="tab-content">
+        <h2>🏥 Medical Summary</h2>
+        <form id="medical-summary-form" class="medical-form">
+          <div class="form-group">
+            <label>Blood Type</label>
+            <select id="blood-type">
+              <option value="">Select</option>
+              <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+              <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Allergies</label>
+            <textarea id="allergies" rows="2" placeholder="e.g., Penicillin, Peanuts"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Chronic Conditions</label>
+            <textarea id="conditions" rows="2" placeholder="e.g., Diabetes, Hypertension"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Recent Diagnoses</label>
+            <textarea id="diagnoses" rows="2" placeholder="e.g., Influenza, Sprained ankle"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Summary</button>
+        </form>
+      </div>
+
+      <!-- Billing Tab -->
+      <div id="billing-tab" class="tab-content">
+        <h2>💰 Billing & Payments</h2>
+        <div id="billing-list">
+          <div class="skeleton" style="height: 100px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2026 MediBook Hospital. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <button id="darkModeToggle" class="theme-toggle">🌙</button>
+  <script src="script.js"></script>
+  <script src="reports.js"></script>
+</body>
+</html>
