@@ -1766,6 +1766,35 @@ body.high-contrast button {
   transform: translateY(-1px);
 }
 
+/* Active state for accessibility toggle buttons */
+.btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn.active:hover {
+  background: var(--accent-dark);
+}
+
+#resetAccessibility:hover {
+  background: var(--error);
+  color: #fff;
+  border-color: var(--error);
+}
+
+.toast-undo {
+  background: none !important;
+  border: none !important;
+  color: var(--accent) !important;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0 0.25rem;
+}
+.toast-undo:hover {
+  opacity: 0.8;
+}
+
 /* Confirmation card pop-in */
 .confirmation-card {
   animation: popIn 0.5s cubic-bezier(0.2,0,0,1) forwards;

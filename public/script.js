@@ -68,6 +68,47 @@ function showSkeleton(container, count = 3) {
   container.innerHTML = Array.from({ length: count }, () => '<div class="skeleton" aria-hidden="true"></div>').join('');
 }
 
+function showNotificationWithUndo(message, undoCallback) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.style.position = 'fixed';
+    container.style.right = '1rem';
+    container.style.bottom = '1rem';
+    container.style.zIndex = 1100;
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column-reverse';
+    container.style.gap = '0.5rem';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = 'toast toast--info';
+  toast.setAttribute('role', 'status');
+  toast.innerHTML = `
+    <span class="toast-indicator" aria-hidden="true"></span>
+    <div style="flex:1;">${message}</div>
+    <button class="toast-undo" style="background:none; border:none; color:var(--accent); font-weight:600; cursor:pointer; text-decoration:underline; margin-left:0.5rem;">Undo</button>
+    <button class="toast-close" aria-label="Close toast">×</button>
+  `;
+  container.appendChild(toast);
+
+  toast.querySelector('.toast-undo').addEventListener('click', () => {
+    undoCallback();
+    toast.remove();
+  });
+
+  const timer = setTimeout(() => {
+    toast.remove();
+  }, 5000);
+
+  toast.querySelector('.toast-close').addEventListener('click', () => {
+    clearTimeout(timer);
+    toast.remove();
+  });
+}
+
 // ========== PERSONALIZATION & PREFERENCES ==========
 
 function initDarkMode() {
@@ -95,11 +136,24 @@ function initLanguagePreference() {
   }
 }
 
+function resetAccessibility() {
+  document.body.classList.remove('large-text', 'high-contrast');
+  localStorage.removeItem('largeText');
+  localStorage.removeItem('highContrast');
+
+  const largeBtn = document.getElementById('largeTextToggle');
+  const contrastBtn = document.getElementById('highContrastToggle');
+  if (largeBtn) largeBtn.classList.remove('active');
+  if (contrastBtn) contrastBtn.classList.remove('active');
+
+  showNotification('Accessibility settings reset to default', 'info');
+}
+
 function initAccessibility() {
   const largeTextBtn = document.getElementById('largeTextToggle');
   const highContrastBtn = document.getElementById('highContrastToggle');
+  const resetBtn = document.getElementById('resetAccessibility');
 
-  // Load saved preferences
   if (localStorage.getItem('largeText') === 'true') {
     document.body.classList.add('large-text');
     if (largeTextBtn) largeTextBtn.classList.add('active');
@@ -109,24 +163,52 @@ function initAccessibility() {
     if (highContrastBtn) highContrastBtn.classList.add('active');
   }
 
-  // Toggle handlers
   if (largeTextBtn) {
     largeTextBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      const wasEnabled = document.body.classList.contains('large-text');
       document.body.classList.toggle('large-text');
       largeTextBtn.classList.toggle('active');
-      localStorage.setItem('largeText', document.body.classList.contains('large-text'));
-      showNotification('Large text mode ' + (document.body.classList.contains('large-text') ? 'enabled' : 'disabled'), 'info');
+      const isEnabled = document.body.classList.contains('large-text');
+      localStorage.setItem('largeText', String(isEnabled));
+
+      showNotificationWithUndo(
+        isEnabled ? 'Large text enabled' : 'Large text disabled',
+        () => {
+          document.body.classList.toggle('large-text');
+          largeTextBtn.classList.toggle('active');
+          localStorage.setItem('largeText', String(!isEnabled));
+          showNotification('Change undone', 'info');
+        }
+      );
     });
   }
 
   if (highContrastBtn) {
     highContrastBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      const wasEnabled = document.body.classList.contains('high-contrast');
       document.body.classList.toggle('high-contrast');
       highContrastBtn.classList.toggle('active');
-      localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
-      showNotification('High contrast mode ' + (document.body.classList.contains('high-contrast') ? 'enabled' : 'disabled'), 'info');
+      const isEnabled = document.body.classList.contains('high-contrast');
+      localStorage.setItem('highContrast', String(isEnabled));
+
+      showNotificationWithUndo(
+        isEnabled ? 'High contrast enabled' : 'High contrast disabled',
+        () => {
+          document.body.classList.toggle('high-contrast');
+          highContrastBtn.classList.toggle('active');
+          localStorage.setItem('highContrast', String(!isEnabled));
+          showNotification('Change undone', 'info');
+        }
+      );
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetAccessibility();
     });
   }
 }
