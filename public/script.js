@@ -2212,6 +2212,21 @@ window.deleteAppointment = async function(id) {
 
 // Initialize everything when page loads
 document.addEventListener('DOMContentLoaded', async () => {
+  if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
+    const token = getToken();
+    if (token) {
+      const role = localStorage.getItem('userRole');
+      if (role === 'doctor') {
+        window.location.href = 'doctor-dashboard.html';
+      } else if (role === 'admin') {
+        window.location.href = 'admin-dashboard.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+      return;
+    }
+  }
+
   initDarkMode();
   initAccessibility();
   initTabs();
