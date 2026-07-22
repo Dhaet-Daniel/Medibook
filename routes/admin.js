@@ -5,6 +5,7 @@ const role = require('../middleware/role');
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
+const Invoice = require('../models/Invoice');
 
 router.use(auth, role('admin'));
 
@@ -15,7 +16,20 @@ router.get('/kpi', async (req, res) => {
   const today = new Date(); today.setHours(0,0,0,0);
   const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
   const todayAppointments = await Appointment.countDocuments({ date: { $gte: today, $lt: tomorrow } });
-  const revenue = 18420; // mock – you can sum payments later
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const endOfMonth = new Date(startOfMonth);
+  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+
+  const revenueData = await Invoice.aggregate([
+    { $match: { status: 'paid', paidAt: { $gte: startOfMonth, $lt: endOfMonth } } },
+    { $group: { _id: null, total: { $sum: '$amount' } } }
+  ]);
+
+  const revenue = revenueData.length > 0 ? revenueData[0].total : 0;
   res.json({ totalDoctors, totalPatients, todayAppointments, revenue });
 });
 
@@ -28,7 +42,7 @@ router.get('/doctors', async (req, res) => {
 // Add a new doctor - creates User + Doctor
 router.post('/doctors', async (req, res) => {
   try {
-    const { firstName, lastName, email, password, specialization, licenseNumber, location } = req.body;
+    const { firstName, lastName, email, password, specialization, licenseNumber, location, consultationFee, onlineFee } = req.body;
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ error: 'Email already in use' });
 
@@ -41,7 +55,9 @@ router.post('/doctors', async (req, res) => {
       specialization: specialization || '',
       licenseNumber: licenseNumber || '',
       dateOfBirth: new Date('1970-01-01'),
-      phone: ''
+      phone: '',
+      consultationFee: Number(consultationFee) || 50,
+      onlineFee: Number(onlineFee) || 40
     });
 
     await user.save();
@@ -53,7 +69,9 @@ router.post('/doctors', async (req, res) => {
       rating: 4.5,
       reviews: 0,
       nextAvailable: 'Check availability',
-      avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase()
+      avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase(),
+      consultationFee: Number(consultationFee) || 50,
+      onlineFee: Number(onlineFee) || 40
     });
 
     await doctor.save();
@@ -97,7 +115,7 @@ router.get('/doctors/:id', async (req, res) => {
 // Update doctor (PUT)
 router.put('/doctors/:id', async (req, res) => {
   try {
-    const { firstName, lastName, email, specialization, licenseNumber, location } = req.body;
+    const { firstName, lastName, email, specialization, licenseNumber, location, consultationFee, onlineFee } = req.body;
     // Update User
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ error: 'Doctor not found' });
@@ -106,6 +124,8 @@ router.put('/doctors/:id', async (req, res) => {
     user.email = email || user.email;
     user.specialization = specialization || user.specialization;
     user.licenseNumber = licenseNumber || user.licenseNumber;
+    user.consultationFee = Number.isFinite(Number(consultationFee)) ? Number(consultationFee) : user.consultationFee;
+    user.onlineFee = Number.isFinite(Number(onlineFee)) ? Number(onlineFee) : user.onlineFee;
     await user.save();
 
     // Update Doctor document (for patient view)
@@ -115,6 +135,8 @@ router.put('/doctors/:id', async (req, res) => {
       doctor.specialty = specialization || doctor.specialty;
       doctor.location = location || doctor.location;
       doctor.avatarInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+      doctor.consultationFee = Number.isFinite(Number(consultationFee)) ? Number(consultationFee) : doctor.consultationFee;
+      doctor.onlineFee = Number.isFinite(Number(onlineFee)) ? Number(onlineFee) : doctor.onlineFee;
       await doctor.save();
     }
 
