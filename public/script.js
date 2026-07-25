@@ -1469,7 +1469,7 @@ function initWizard() {
   const finalBookBtn = document.getElementById('final-book-btn');
   if (finalBookBtn) {
     finalBookBtn.addEventListener('click', async () => {
-      finalBookBtn.textContent = 'Processing payment...';
+      finalBookBtn.textContent = 'Booking...';
       finalBookBtn.disabled = true;
 
       try {
@@ -1477,42 +1477,16 @@ function initWizard() {
           doctorId: wizardState.doctorId,
           date: wizardState.date,
           time: wizardState.time,
-          reason: wizardState.reason,
-          type: 'in-person'
+          reason: wizardState.reason
         };
 
-        const appointment = await createAppointment(appointmentData);
-
-        const configRes = await fetch('/api/payments/config');
-        const { publishableKey } = await configRes.json();
-        if (!publishableKey) throw new Error('Stripe publishable key is not configured.');
-
-        const paymentRes = await fetch('/api/payments/create-payment-intent', {
-          method: 'POST',
-          headers: authHeader(),
-          body: JSON.stringify({ appointmentId: appointment._id })
-        });
-        const paymentData = await paymentRes.json();
-        if (!paymentRes.ok) throw new Error(paymentData.error || 'Failed to create payment intent');
-
-        const stripe = Stripe(publishableKey);
-        const elements = stripe.elements();
-        const cardElement = elements.create('card');
-        cardElement.mount('#card-element');
-
-        const { error } = await stripe.confirmCardPayment(paymentData.clientSecret, {
-          payment_method: { card: cardElement }
-        });
-
-        if (error) throw new Error(error.message);
-
+        await createAppointment(appointmentData);
         addToRecentBookings(wizardState.doctorId, wizardState.doctorName);
-        localStorage.setItem('currentBooking', JSON.stringify(appointment));
 
         finalBookBtn.classList.add('success');
-        finalBookBtn.textContent = '✓ Paid & Booked!';
-        showNotification('Appointment booked and payment successful!', 'success');
-        setTimeout(() => window.location.href = 'confirmation.html', 1000);
+        finalBookBtn.textContent = '✓ Booked!';
+        showNotification('Appointment booked successfully!', 'success');
+        setTimeout(() => window.location.href = 'dashboard.html', 800);
       } catch (err) {
         showNotification(err.message || 'Failed to book appointment', 'error');
         finalBookBtn.textContent = 'Confirm Booking →';
@@ -1960,8 +1934,6 @@ window.openEditDoctor = async function(id) {
     document.getElementById('edit-specialty').value = doc.specialization || '';
     document.getElementById('edit-license').value = doc.licenseNumber || '';
     document.getElementById('edit-location').value = doc.location || '';
-    document.getElementById('edit-consultation-fee').value = doc.consultationFee ?? 50;
-    document.getElementById('edit-online-fee').value = doc.onlineFee ?? 40;
 
     document.getElementById('edit-doctor-modal').setAttribute('aria-hidden', 'false');
   } catch (err) {
@@ -1989,9 +1961,7 @@ function setupAddDoctorModal() {
       password: document.getElementById('doc-password').value.trim(),
       specialization: document.getElementById('doc-specialty').value.trim(),
       location: document.getElementById('doc-location').value.trim() || 'Main Hospital',
-      licenseNumber: document.getElementById('doc-license').value.trim(),
-      consultationFee: document.getElementById('doc-consultation-fee').value,
-      onlineFee: document.getElementById('doc-online-fee').value
+      licenseNumber: document.getElementById('doc-license').value.trim()
     };
     if (!data.firstName || !data.lastName || !data.email || !data.password) {
       showNotification('All required fields must be filled', 'error');
@@ -2038,9 +2008,7 @@ function setupEditDoctorModal() {
       email: document.getElementById('edit-email').value.trim(),
       specialization: document.getElementById('edit-specialty').value.trim(),
       licenseNumber: document.getElementById('edit-license').value.trim(),
-      location: document.getElementById('edit-location').value.trim(),
-      consultationFee: document.getElementById('edit-consultation-fee').value,
-      onlineFee: document.getElementById('edit-online-fee').value
+      location: document.getElementById('edit-location').value.trim()
     };
     try {
       const res = await fetch(`/api/admin/doctors/${id}`, {

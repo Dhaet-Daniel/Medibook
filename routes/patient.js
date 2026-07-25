@@ -37,12 +37,5 @@ router.put('/patient/medical-summary', auth, async (req, res) => {
   }
 });
 
-router.get('/billing/invoices', auth, async (req, res) => {
-  const mockInvoices = [
-    { invoiceNumber: 'INV-001', date: new Date(), amount: 150, status: 'paid', description: 'Consultation' },
-    { invoiceNumber: 'INV-002', date: new Date(), amount: 250, status: 'pending', description: 'Lab tests' }
-  ];
-  res.json(mockInvoices);
-});
 
 module.exports = router;

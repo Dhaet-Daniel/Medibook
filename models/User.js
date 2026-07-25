@@ -38,8 +38,6 @@ userSchema.add({
   profilePhoto: { type: String, default: '' },
   bio: { type: String, default: '' },
   languages: [{ type: String }],
-  consultationFee: { type: Number, default: 0 },
-  onlineFee: { type: Number, default: 0 },
   appointmentDuration: { type: Number, default: 30 }
 });
 

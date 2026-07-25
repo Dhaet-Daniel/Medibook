@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAppointments();
   loadPrescriptions();
   loadMedicalSummary();
-  loadBilling();
   initMedicalSummaryForm();
 });
 
@@ -207,37 +206,6 @@ async function generatePDF() {
       <p><strong>Recent Diagnoses:</strong> ${medData.diagnoses || 'None'}</p>
     `;
 
-    const billingContainer = document.getElementById('pdf-billing-list');
-    const billRes = await fetch('/api/billing/invoices', { headers: authHeader() });
-    const invoices = await billRes.json();
-    if (invoices.length) {
-      const rows = invoices.map(inv => `
-        <tr>
-          <td style="border:1px solid #ddd; padding:8px;">${inv.invoiceNumber}</td>
-          <td style="border:1px solid #ddd; padding:8px;">${new Date(inv.date).toLocaleDateString()}</td>
-          <td style="border:1px solid #ddd; padding:8px;">$${inv.amount.toFixed(2)}</td>
-          <td style="border:1px solid #ddd; padding:8px;">${inv.status}</td>
-          <td style="border:1px solid #ddd; padding:8px;">${inv.description}</td>
-        </tr>
-      `).join('');
-      billingContainer.innerHTML = `
-        <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
-          <thead>
-            <tr style="background:#f1f5f9;">
-              <th style="border:1px solid #ddd; padding:8px;">Invoice #</th>
-              <th style="border:1px solid #ddd; padding:8px;">Date</th>
-              <th style="border:1px solid #ddd; padding:8px;">Amount</th>
-              <th style="border:1px solid #ddd; padding:8px;">Status</th>
-              <th style="border:1px solid #ddd; padding:8px;">Description</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
-    } else {
-      billingContainer.innerHTML = '<p>No invoices found.</p>';
-    }
-
     const pdfElement = document.getElementById('pdf-content');
     pdfElement.style.display = 'block';
 
@@ -323,33 +291,3 @@ function initMedicalSummaryForm() {
   });
 }
 
-// ---------- BILLING ----------
-async function loadBilling() {
-  const container = document.getElementById('billing-list');
-  try {
-    const res = await fetch('/api/billing/invoices', { headers: authHeader() });
-    if (!res.ok) throw new Error('Failed to load billing');
-    const invoices = await res.json();
-    if (!invoices.length) {
-      container.innerHTML = `<div class="empty-state">No invoices found.</div>`;
-      return;
-    }
-    const rows = invoices.map(inv => `
-      <tr>
-        <td>${inv.invoiceNumber}</td>
-        <td>${new Date(inv.date).toLocaleDateString()}</td>
-        <td>$${inv.amount.toFixed(2)}</td>
-        <td><span class="status-badge status-badge--${inv.status}">${inv.status}</span></td>
-        <td>${inv.description}</td>
-      </tr>
-    `).join('');
-    container.innerHTML = `
-      <table class="data-table">
-        <thead><tr><th>Invoice #</th><th>Date</th><th>Amount</th><th>Status</th><th>Description</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    `;
-  } catch (err) {
-    container.innerHTML = `<p class="error">${err.message}</p>`;
-  }
-}

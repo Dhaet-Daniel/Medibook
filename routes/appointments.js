@@ -3,7 +3,6 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
-const { calculateFee } = require('../utils/pricing');
 
 // Get user's appointments
 router.get('/', auth, async (req, res) => {
@@ -18,22 +17,19 @@ router.get('/', auth, async (req, res) => {
 // Create a new appointment
 router.post('/', auth, async (req, res) => {
   try {
-    const { doctorId, date, time, reason, type } = req.body;
+    const { doctorId, date, time, reason } = req.body;
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ error: 'Doctor not found.' });
     }
 
-    const fee = await calculateFee(doctor, type || 'in-person');
     const appointment = new Appointment({
       user: req.userId,
       doctor: doctorId,
       doctorName: doctor.name,
       date: new Date(date),
       time,
-      reason,
-      type: type || 'in-person',
-      fee
+      reason
     });
     await appointment.save();
     res.status(201).json(appointment);

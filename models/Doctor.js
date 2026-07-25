@@ -7,9 +7,7 @@ const doctorSchema = new mongoose.Schema({
   rating: { type: Number, min: 0, max: 5, default: 4.5 },
   reviews: { type: Number, default: 0 },
   nextAvailable: { type: String, default: 'Check availability' },
-  avatarInitials: { type: String },
-  consultationFee: { type: Number, default: 50 },
-  onlineFee: { type: Number, default: 40 }
+  avatarInitials: { type: String }
 });
 
 module.exports = mongoose.model('Doctor', doctorSchema);
