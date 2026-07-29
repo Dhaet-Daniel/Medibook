@@ -126,3 +126,50 @@ router.put('/preferences', auth, async (req, res) => {
 });
 
 module.exports = router;
+
+
+const { body } = require('express-validator');
+const validateRequest = require('../middleware/validate');
+
+// Registration validation
+router.post('/register',
+  [
+    body('firstName').trim().notEmpty().withMessage('First name is required').isLength({ min: 2, max: 50 }).withMessage('First name must be 2-50 characters'),
+    body('lastName').trim().notEmpty().withMessage('Last name is required').isLength({ min: 2, max: 50 }),
+    body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('dateOfBirth').isISO8601().withMessage('Valid date of birth is required').custom((value) => {
+      const birthDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (birthDate > today) {
+        throw new Error('Date of birth cannot be in the future');
+      }
+      return true;
+    })
+  ],
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      // ... your registration logic ...
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// Login validation
+router.post('/login',
+  [
+    body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
+    body('password').notEmpty().withMessage('Password is required')
+  ],
+  validateRequest,
+  async (req, res, next) => {
+    try {
+      // ... your login logic ...
+    } catch (err) {
+      next(err);
+    }
+  }
+);

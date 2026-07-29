@@ -2391,3 +2391,226 @@ function initInlineValidation() {
 window.addEventListener('beforeunload', () => {
   stopKpiPolling();
 });
+
+
+
+// ========== FORM VALIDATION ==========
+
+// Validate a single field with real‑time feedback
+function validateField(input, rules) {
+  const errorElement = input.parentElement.querySelector('.field-error');
+  const value = input.value.trim();
+
+  let isValid = true;
+  let errorMessage = '';
+
+  for (const rule of rules) {
+    const result = rule(value);
+    if (!result.valid) {
+      isValid = false;
+      errorMessage = result.message;
+      break;
+    }
+  }
+
+  input.setAttribute('aria-invalid', String(!isValid));
+  if (errorElement) {
+    errorElement.textContent = isValid ? '' : errorMessage;
+    errorElement.style.display = isValid ? 'none' : 'block';
+  }
+
+  return isValid;
+}
+
+// Validation rules
+const validators = {
+  required: (msg = 'This field is required') => (value) => ({
+    valid: value.length > 0,
+    message: msg
+  }),
+  email: (msg = 'Valid email required') => (value) => ({
+    valid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+    message: msg
+  }),
+  minLength: (length, msg = `Minimum ${length} characters`) => (value) => ({
+    valid: value.length >= length,
+    message: msg
+  }),
+  maxLength: (length, msg = `Maximum ${length} characters`) => (value) => ({
+    valid: value.length <= length,
+    message: msg
+  }),
+  dateOfBirth: (msg = 'Date of birth cannot be in the future') => (value) => {
+    const date = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return {
+      valid: date <= today,
+      message: msg
+    };
+  }
+};
+
+// Attach validation to form inputs
+function attachValidation(form) {
+  const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+  inputs.forEach(input => {
+    // Create error element if missing
+    let errorEl = input.parentElement.querySelector('.field-error');
+    if (!errorEl) {
+      errorEl = document.createElement('span');
+      errorEl.className = 'field-error';
+      errorEl.setAttribute('role', 'alert');
+      errorEl.style.display = 'none';
+      input.parentElement.appendChild(errorEl);
+    }
+
+    // Validate on blur and input
+    input.addEventListener('blur', () => {
+      validateInput(input);
+    });
+    input.addEventListener('input', () => {
+      validateInput(input);
+    });
+  });
+}
+
+function validateInput(input) {
+  const rules = getValidationRules(input);
+  return validateField(input, rules);
+}
+
+function getValidationRules(input) {
+  const rules = [];
+  const id = input.id;
+
+  // Map specific rules to input IDs
+  if (input.hasAttribute('required')) {
+    rules.push(validators.required());
+  }
+
+  if (id === 'reg-email' || id === 'login-email' || id === 'profile-email') {
+    rules.push(validators.email());
+  }
+
+  if (id === 'reg-password' || id === 'login-password') {
+    rules.push(validators.minLength(6, 'Password must be at least 6 characters'));
+  }
+
+  if (id === 'reg-dob' || id === 'profile-dob') {
+    rules.push(validators.dateOfBirth());
+  }
+
+  if (id === 'profile-firstname' || id === 'profile-lastname' || id === 'reg-fname' || id === 'reg-lname') {
+    rules.push(validators.maxLength(50, 'Maximum 50 characters'));
+  }
+
+  return rules;
+}
+
+
+function initLoginForm() {
+  const loginForm = document.querySelector('#panel-login form');
+  if (!loginForm) return;
+
+  // Attach validation
+  attachValidation(loginForm);
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Validate all inputs before submission
+    const inputs = loginForm.querySelectorAll('input[required]');
+    let isValid = true;
+    inputs.forEach(input => {
+      if (!validateInput(input)) isValid = false;
+    });
+
+    if (!isValid) {
+      showNotification('Please fix all errors before submitting.', 'error');
+      return;
+    }
+
+    // ... rest of login logic with try/catch ...
+  });
+}
+
+
+function initWizard() {
+  // ... existing wizard init ...
+
+  // Add real‑time validation to date and time
+  const dateInput = document.getElementById('appt-date');
+  if (dateInput) {
+    dateInput.addEventListener('change', () => {
+      const selectedDate = new Date(dateInput.value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        showNotification('Appointment date cannot be in the past', 'error');
+        dateInput.value = '';
+      }
+    });
+  }
+}
+
+
+function setLoading(button, loading = true) {
+  if (loading) {
+    button.dataset.originalText = button.textContent;
+    button.textContent = 'Processing...';
+    button.disabled = true;
+    button.classList.add('loading');
+  } else {
+    button.textContent = button.dataset.originalText || 'Submit';
+    button.disabled = false;
+    button.classList.remove('loading');
+  }
+}
+
+function setLoading(button, loading = true) {
+  if (!button) return;
+  if (loading) {
+    button.dataset.originalText = button.textContent;
+    button.textContent = 'Processing...';
+    button.disabled = true;
+    button.classList.add('loading');
+  } else {
+    button.textContent = button.dataset.originalText || 'Submit';
+    button.disabled = false;
+    button.classList.remove('loading');
+  }
+}
+
+// ========== GLOBAL ERROR BOUNDARY ==========
+
+// Catch unhandled promise rejections
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled rejection:', event.reason);
+  showNotification('Something went wrong. Please try again.', 'error');
+  // Prevent default browser error
+  event.preventDefault();
+});
+
+// Catch global JS errors
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+  showNotification('An unexpected error occurred. Please refresh the page.', 'error');
+  event.preventDefault();
+});
+
+// Wrap async functions with error handling
+function withErrorHandling(fn) {
+  return async (...args) => {
+    try {
+      return await fn(...args);
+    } catch (err) {
+      console.error('Error in function:', err);
+      showNotification(err.message || 'Something went wrong.', 'error');
+      throw err;
+    }
+  };
+}
+
+// Usage: wrap any async function
+const safeFetchAppointments = withErrorHandling(fetchAppointments);

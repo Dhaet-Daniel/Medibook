@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const role = require('../middleware/role');
+const validateRequest = require('../middleware/validate');
+const { body, param } = require('express-validator');
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
@@ -26,45 +28,56 @@ router.get('/doctors', async (req, res) => {
 });
 
 // Add a new doctor - creates User + Doctor
-router.post('/doctors', async (req, res) => {
-  try {
-    const { firstName, lastName, email, password, specialization, licenseNumber, location } = req.body;
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ error: 'Email already in use' });
+router.post(
+  '/doctors',
+  [
+    body('firstName').trim().notEmpty().withMessage('First name required').isLength({ min: 2, max: 50 }),
+    body('lastName').trim().notEmpty().withMessage('Last name required').isLength({ min: 2, max: 50 }),
+    body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('specialization').optional().isString().isLength({ max: 100 })
+  ],
+  validateRequest,
+  async (req, res) => {
+    try {
+      const { firstName, lastName, email, password, specialization, licenseNumber, location } = req.body;
+      const existing = await User.findOne({ email });
+      if (existing) return res.status(400).json({ error: 'Email already in use' });
 
-    const user = new User({
-      firstName,
-      lastName,
-      email,
-      password,
-      role: 'doctor',
-      specialization: specialization || '',
-      licenseNumber: licenseNumber || '',
-      dateOfBirth: new Date('1970-01-01'),
-      phone: ''
-    });
+      const user = new User({
+        firstName,
+        lastName,
+        email,
+        password,
+        role: 'doctor',
+        specialization: specialization || '',
+        licenseNumber: licenseNumber || '',
+        dateOfBirth: new Date('1970-01-01'),
+        phone: ''
+      });
 
-    await user.save();
+      await user.save();
 
-    const doctor = new Doctor({
-      name: `${firstName} ${lastName}`,
-      specialty: specialization || 'General Practice',
-      location: location || 'Main Hospital',
-      rating: 4.5,
-      reviews: 0,
-      nextAvailable: 'Check availability',
-      avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase()
-    });
+      const doctor = new Doctor({
+        name: `${firstName} ${lastName}`,
+        specialty: specialization || 'General Practice',
+        location: location || 'Main Hospital',
+        rating: 4.5,
+        reviews: 0,
+        nextAvailable: 'Check availability',
+        avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase()
+      });
 
-    await doctor.save();
-    res.status(201).json({
-      message: 'Doctor created',
-      doctor: { id: doctor._id, name: doctor.name, specialty: doctor.specialty }
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+      await doctor.save();
+      res.status(201).json({
+        message: 'Doctor created',
+        doctor: { id: doctor._id, name: doctor.name, specialty: doctor.specialty }
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   }
-});
+);
 
 // Patients list
 router.get('/patients', async (req, res) => {
@@ -95,34 +108,44 @@ router.get('/doctors/:id', async (req, res) => {
 });
 
 // Update doctor (PUT)
-router.put('/doctors/:id', async (req, res) => {
-  try {
-    const { firstName, lastName, email, specialization, licenseNumber, location } = req.body;
-    // Update User
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ error: 'Doctor not found' });
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.email = email || user.email;
-    user.specialization = specialization || user.specialization;
-    user.licenseNumber = licenseNumber || user.licenseNumber;
-    await user.save();
+router.put(
+  '/doctors/:id',
+  [
+    param('id').isMongoId().withMessage('Invalid doctor ID'),
+    body('firstName').optional().trim().isLength({ min: 2, max: 50 }),
+    body('lastName').optional().trim().isLength({ min: 2, max: 50 }),
+    body('email').optional().isEmail().withMessage('Valid email required').normalizeEmail()
+  ],
+  validateRequest,
+  async (req, res) => {
+    try {
+      const { firstName, lastName, email, specialization, licenseNumber, location } = req.body;
+      // Update User
+      const user = await User.findById(req.params.id);
+      if (!user) return res.status(404).json({ error: 'Doctor not found' });
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.email = email || user.email;
+      user.specialization = specialization || user.specialization;
+      user.licenseNumber = licenseNumber || user.licenseNumber;
+      await user.save();
 
-    // Update Doctor document (for patient view)
-    const doctor = await Doctor.findOne({ name: { $regex: new RegExp(`^${user.firstName} ${user.lastName}$`, 'i') } });
-    if (doctor) {
-      doctor.name = `${firstName} ${lastName}`;
-      doctor.specialty = specialization || doctor.specialty;
-      doctor.location = location || doctor.location;
-      doctor.avatarInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
-      await doctor.save();
+      // Update Doctor document (for patient view)
+      const doctor = await Doctor.findOne({ name: { $regex: new RegExp(`^${user.firstName} ${user.lastName}$`, 'i') } });
+      if (doctor) {
+        doctor.name = `${firstName} ${lastName}`;
+        doctor.specialty = specialization || doctor.specialty;
+        doctor.location = location || doctor.location;
+        doctor.avatarInitials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+        await doctor.save();
+      }
+
+      res.json({ message: 'Doctor updated', doctor: user });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-
-    res.json({ message: 'Doctor updated', doctor: user });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
-});
+);
 
 // Verify doctor
 router.put('/doctors/:id/verify', async (req, res) => {

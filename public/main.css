@@ -2268,3 +2268,53 @@ body.high-contrast button {
 .medical-form {
   max-width: 600px;
 }
+
+
+/* ========== ERROR MESSAGES ========== */
+
+.field-error {
+  display: none;
+  color: var(--error, #ef4444);
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+  font-weight: 500;
+  animation: fadeIn 0.2s ease;
+}
+
+.field-error.show {
+  display: block;
+}
+
+/* Invalid input styling */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--error, #ef4444) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Success input styling */
+input[aria-invalid="false"]:not(:placeholder-shown),
+select[aria-invalid="false"]:not(:placeholder-shown) {
+  border-color: var(--success, #10b981) !important;
+}
+
+/* Form error summary */
+.error-summary {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid var(--error, #ef4444);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: var(--error, #ef4444);
+  display: none;
+}
+.error-summary.show {
+  display: block;
+}
+
+/* Toast error styling */
+.toast--error {
+  border-left-color: var(--error, #ef4444);
+  background: #fef2f2;
+}
