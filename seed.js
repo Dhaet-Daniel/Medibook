@@ -12,7 +12,8 @@ const doctors = [
     rating: 5.0,
     reviews: 127,
     nextAvailable: 'Tomorrow, 9:00 AM',
-    avatarInitials: 'RA'
+    avatarInitials: 'RA',
+    isVerified: false
   },
   {
     name: 'Dr. Samuel Mbeki',
@@ -21,7 +22,8 @@ const doctors = [
     rating: 4.2,
     reviews: 89,
     nextAvailable: '7 Apr, 2:30 PM',
-    avatarInitials: 'SM'
+    avatarInitials: 'SM',
+    isVerified: false
   },
   {
     name: 'Dr. Helen Clarke',
@@ -30,14 +32,15 @@ const doctors = [
     rating: 4.8,
     reviews: 156,
     nextAvailable: '9 Apr, 11:00 AM',
-    avatarInitials: 'HC'
+    avatarInitials: 'HC',
+    isVerified: false
   }
 ];
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(async () => {
     await Doctor.deleteMany();
-    await Doctor.insertMany(doctors);
+    const seededDoctors = await Doctor.insertMany(doctors);
     console.log('Doctors seeded successfully.');
 
     let adminUser = await User.findOne({ email: 'admin@medibook.com' });
@@ -66,9 +69,16 @@ mongoose.connect(process.env.MONGODB_URI)
       qualification: 'MD, Dermatology',
       yearsOfExperience: 15,
       phone: '+1234567891',
-      consultationFee: 150
+      consultationFee: 150,
+      isVerified: true
     });
     await doctorUser.save();
+
+    const samuelDoctor = seededDoctors.find(doctor => doctor.name.includes('Samuel Mbeki'));
+    if (samuelDoctor) {
+      await Doctor.findByIdAndUpdate(samuelDoctor._id, { userId: doctorUser._id, isVerified: true });
+    }
+
     console.log('Doctor user ready: doctor@medibook.com / Doctor123!');
 
     process.exit();

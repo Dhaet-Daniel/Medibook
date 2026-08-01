@@ -7,7 +7,7 @@ const auth = require('../middleware/auth');
 // Get all doctors (public)
 router.get('/', async (req, res) => {
   try {
-    const doctors = await Doctor.find();
+    const doctors = await Doctor.find({ isVerified: true });
     res.json(doctors);
   } catch (err) {
     res.status(500).json({ error: err.message });

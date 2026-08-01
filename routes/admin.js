@@ -12,19 +12,37 @@ router.use(auth, role('admin'));
 
 // KPI
 router.get('/kpi', async (req, res) => {
-  const totalDoctors = await User.countDocuments({ role: 'doctor' });
-  const totalPatients = await User.countDocuments({ role: 'patient' });
-  const today = new Date(); today.setHours(0,0,0,0);
-  const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate()+1);
-  const todayAppointments = await Appointment.countDocuments({ date: { $gte: today, $lt: tomorrow } });
-  const revenue = 18420; // mock
-  res.json({ totalDoctors, totalPatients, todayAppointments, revenue });
+  try {
+    const totalDoctors = await User.countDocuments({ role: 'doctor' });
+    const totalPatients = await User.countDocuments({ role: 'patient' });
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayAppointments = await Appointment.countDocuments({
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    const revenue = 0;
+
+    res.json({ totalDoctors, totalPatients, todayAppointments, revenue });
+  } catch (err) {
+    console.error('KPI error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Doctors list
 router.get('/doctors', async (req, res) => {
-  const doctors = await User.find({ role: 'doctor' }).select('-password');
-  res.json(doctors);
+  try {
+    const doctors = await User.find({ role: 'doctor' }).select('-password');
+    res.json(doctors);
+  } catch (err) {
+    console.error('Doctors list error:', err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Add a new doctor - creates User + Doctor
@@ -65,7 +83,9 @@ router.post(
         rating: 4.5,
         reviews: 0,
         nextAvailable: 'Check availability',
-        avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase()
+        avatarInitials: (firstName.charAt(0) + lastName.charAt(0)).toUpperCase(),
+        userId: user._id,
+        isVerified: user.isVerified || false
       });
 
       await doctor.save();
@@ -87,8 +107,15 @@ router.get('/patients', async (req, res) => {
 
 // All appointments
 router.get('/appointments', async (req, res) => {
-  const appointments = await Appointment.find().populate('user doctor', 'firstName lastName email').sort({ date: -1 });
-  res.json(appointments);
+  try {
+    const appointments = await Appointment.find()
+      .populate('user', 'firstName lastName email')
+      .populate('doctor', 'name')
+      .sort({ date: -1 });
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Get single doctor (for edit modal)
@@ -150,8 +177,26 @@ router.put(
 // Verify doctor
 router.put('/doctors/:id/verify', async (req, res) => {
   const { verified } = req.body;
-  await User.findByIdAndUpdate(req.params.id, { isVerified: verified });
-  res.json({ message: `Doctor ${verified ? 'verified' : 'unverified'}` });
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { isVerified: verified },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ error: 'Doctor not found' });
+
+    const doctor = await Doctor.findOne({ userId: req.params.id });
+    if (doctor) {
+      doctor.isVerified = verified;
+      await doctor.save();
+    }
+
+    res.json({ message: `Doctor ${verified ? 'verified' : 'unverified'}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Delete doctor
@@ -164,7 +209,8 @@ router.delete('/doctors/:id', async (req, res) => {
 router.get('/appointments/:id', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
-      .populate('user doctor', 'firstName lastName email');
+      .populate('user', 'firstName lastName email')
+      .populate('doctor', 'name');
     if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
     res.json(appointment);
   } catch (err) {

@@ -1867,31 +1867,48 @@ async function initAdminDashboard() {
 
 // --- Load real KPI data ---
 async function loadAdminKPI() {
-  const res = await fetch('/api/admin/kpi', { headers: authHeader() });
-  const data = await res.json();
-  const html = `
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">👨‍⚕️ Total Doctors</div>
-        <div class="kpi-value">${data.totalDoctors}</div>
+  try {
+    const res = await fetch('/api/admin/kpi', { headers: authHeader() });
+    if (!res.ok) throw new Error('Failed to load KPI');
+
+    const data = await res.json();
+    const html = `
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">👨‍⚕️ Total Doctors</div>
+          <div class="kpi-value">${data.totalDoctors ?? 0}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">👥 Total Patients</div>
+          <div class="kpi-value">${data.totalPatients ?? 0}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">📅 Today's Appointments</div>
+          <div class="kpi-value">${data.todayAppointments ?? 0}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">💰 Monthly Revenue</div>
+          <div class="kpi-value">$${data.revenue ?? 0}</div>
+        </div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">👥 Total Patients</div>
-        <div class="kpi-value">${data.totalPatients}</div>
+    `;
+
+    window._kpiHTML = html;
+    const target = document.getElementById('kpi-grid');
+    if (target) target.innerHTML = html;
+  } catch (err) {
+    console.error('KPI load error:', err);
+    window._kpiHTML = `
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">⚠️ Error loading admin data</div>
+          <div class="kpi-value">Please refresh the page</div>
+        </div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">📅 Today's Appointments</div>
-        <div class="kpi-value">${data.todayAppointments}</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">💰 Monthly Revenue</div>
-        <div class="kpi-value">$${data.revenue}</div>
-      </div>
-    </div>
-  `;
-  // Inject into page container – but we handle it in showAdminPage
-  // We'll keep it in a global var to reuse.
-  window._kpiHTML = html;
+    `;
+    const target = document.getElementById('kpi-grid');
+    if (target) target.innerHTML = window._kpiHTML;
+  }
 }
 
 // --- Navigation ---
@@ -1980,14 +1997,20 @@ function showAdminPage(page) {
 async function loadAdminDoctors() {
   const container = document.getElementById('doctors-table-container');
   if (!container) return;
+
   try {
     const res = await fetch('/api/admin/doctors', { headers: authHeader() });
+    if (!res.ok) throw new Error('Failed to load doctors');
+
     const doctors = await res.json();
-    if (!doctors.length) {
+    const doctorList = Array.isArray(doctors) ? doctors : [];
+
+    if (!doctorList.length) {
       container.innerHTML = `<div class="empty-state">No doctors registered yet.</div>`;
       return;
     }
-    const rows = doctors.map(d => `
+
+    const rows = doctorList.map(d => `
       <tr>
         <td>${d.firstName} ${d.lastName}</td>
         <td>${d.specialization || '—'}</td>
@@ -2002,6 +2025,7 @@ async function loadAdminDoctors() {
         </td>
       </tr>
     `).join('');
+
     container.innerHTML = `
       <table class="data-table">
         <thead><tr><th>Name</th><th>Specialty</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
@@ -2009,7 +2033,8 @@ async function loadAdminDoctors() {
       </table>
     `;
   } catch (err) {
-    container.innerHTML = `<p class="error">Failed to load doctors.</p>`;
+    console.error('Doctors load error:', err);
+    container.innerHTML = `<p class="error">Failed to load doctors. Please refresh.</p>`;
   }
 }
 
@@ -2314,19 +2339,23 @@ async function loadAdminAppointments() {
       container.innerHTML = `<div class="empty-state">No appointments yet.</div>`;
       return;
     }
-    const rows = appointments.map(a => `
+    const rows = appointments.map(a => {
+      const doctorName = a.doctor?.name || a.doctorName || '—';
+      const patientName = a.user ? `${a.user.firstName || '—'} ${a.user.lastName || ''}` : (a.userName || '—');
+      return `
       <tr>
         <td>${new Date(a.date).toLocaleDateString()}</td>
         <td>${a.time}</td>
-        <td>${a.user?.firstName || '?'} ${a.user?.lastName || ''}</td>
-        <td>${a.doctor?.firstName || '?'} ${a.doctor?.lastName || ''}</td>
+        <td>${patientName}</td>
+        <td>${doctorName}</td>
         <td><span class="status-badge status-badge--${a.status}">${a.status}</span></td>
         <td class="doctor-actions">
           <button class="btn-sm btn-outline" onclick="openEditAppointment('${a._id}')">✏️ Edit</button>
           <button class="btn-sm btn-outline" onclick="deleteAppointment('${a._id}')">🗑️ Delete</button>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
     container.innerHTML = `
       <table class="data-table">
         <thead><tr><th>Date</th><th>Time</th><th>Patient</th><th>Doctor</th><th>Status</th><th>Actions</th></tr></thead>
