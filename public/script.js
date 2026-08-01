@@ -489,21 +489,36 @@ function initTabs() {
 function initLoginForm() {
   const loginForm = document.querySelector('#panel-login form');
   if (!loginForm) return;
+
+  attachValidation(loginForm);
+
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = loginForm.querySelector('#login-email').value;
-    const password = loginForm.querySelector('#login-password').value;
-    const rememberMe = loginForm.querySelector('#remember-me').checked;
+
+    const emailInput = loginForm.querySelector('#login-email');
+    const passwordInput = loginForm.querySelector('#login-password');
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+    const rememberMe = loginForm.querySelector('#remember-me')?.checked || false;
+
+    const isEmailValid = validateInput(emailInput);
+    const isPasswordValid = validateInput(passwordInput);
+
+    if (!isEmailValid || !isPasswordValid) {
+      showNotification('Please complete the highlighted fields before signing in.', 'error');
+      return;
+    }
+
     const submitBtn = loginForm.querySelector('button[type="submit"]');
-    submitBtn.textContent = 'Logging in...';
-    submitBtn.disabled = true;
+    setLoading(submitBtn, true);
+
     try {
       await handleLogin(email, password, rememberMe); // redirect handled inside
       showNotification('Login successful! Redirecting...', 'success');
     } catch (err) {
       showNotification(err.message, 'error');
-      submitBtn.textContent = 'Sign In';
-      submitBtn.disabled = false;
+    } finally {
+      setLoading(submitBtn, false);
     }
   });
 }
@@ -512,12 +527,30 @@ function initLoginForm() {
 function initRegisterForm() {
   const registerForm = document.querySelector('#panel-register form');
   if (!registerForm) return;
+
+  attachValidation(registerForm);
+
   registerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const firstName = registerForm.querySelector('#reg-fname').value;
-    const lastName = registerForm.querySelector('#reg-lname').value;
-    const email = registerForm.querySelector('#reg-email').value;
-    const password = registerForm.querySelector('#reg-password').value;
+
+    const fields = [
+      registerForm.querySelector('#reg-fname'),
+      registerForm.querySelector('#reg-lname'),
+      registerForm.querySelector('#reg-email'),
+      registerForm.querySelector('#reg-dob'),
+      registerForm.querySelector('#reg-password')
+    ];
+
+    const isValid = fields.every(field => validateInput(field));
+    if (!isValid) {
+      showNotification('Please complete all required fields correctly before continuing.', 'error');
+      return;
+    }
+
+    const firstName = registerForm.querySelector('#reg-fname').value.trim();
+    const lastName = registerForm.querySelector('#reg-lname').value.trim();
+    const email = registerForm.querySelector('#reg-email').value.trim();
+    const password = registerForm.querySelector('#reg-password').value.trim();
     const dob = registerForm.querySelector('#reg-dob').value;
     const submitBtn = registerForm.querySelector('button[type="submit"]');
     submitBtn.textContent = 'Creating account...';
@@ -1068,6 +1101,9 @@ function initDashboardTabs() {
 function initProfileForm() {
   const profileForm = document.getElementById('profile-form');
   if (!profileForm) return;
+
+  attachValidation(profileForm);
+
   profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const submitBtn = profileForm.querySelector('button[type="submit"]');
@@ -1076,11 +1112,23 @@ function initProfileForm() {
       submitBtn.disabled = true;
     }
 
+    const requiredFields = [
+      document.getElementById('profile-firstname'),
+      document.getElementById('profile-lastname'),
+      document.getElementById('profile-email')
+    ];
+
+    const isValid = requiredFields.every(field => validateInput(field));
+    if (!isValid) {
+      showNotification('Please complete the highlighted profile fields before saving.', 'error');
+      return;
+    }
+
     const profileData = {
-      firstName: document.getElementById('profile-firstname').value,
-      lastName: document.getElementById('profile-lastname').value,
-      email: document.getElementById('profile-email').value,
-      phone: document.getElementById('profile-phone').value
+      firstName: document.getElementById('profile-firstname').value.trim(),
+      lastName: document.getElementById('profile-lastname').value.trim(),
+      email: document.getElementById('profile-email').value.trim(),
+      phone: document.getElementById('profile-phone').value.trim()
     };
 
     try {
@@ -1317,16 +1365,23 @@ function renderSpecialties() {
     </div>
   `).join('');
 
-  // Add click handlers
-  document.querySelectorAll('.specialty-card').forEach(card => {
+  const cards = document.querySelectorAll('.specialty-card');
+  cards.forEach(card => {
     card.addEventListener('click', () => {
-      document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('selected'));
+      cards.forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       wizardState.specialty = card.dataset.specialty;
       document.getElementById('specialty-name').textContent = `${wizardState.specialty} Specialists`;
       renderDoctorsBySpecialty();
     });
   });
+
+  if (!wizardState.specialty && cards.length) {
+    cards[0].classList.add('selected');
+    wizardState.specialty = cards[0].dataset.specialty;
+    document.getElementById('specialty-name').textContent = `${wizardState.specialty} Specialists`;
+    renderDoctorsBySpecialty();
+  }
 }
 
 function renderDoctorsBySpecialty() {
@@ -1334,6 +1389,10 @@ function renderDoctorsBySpecialty() {
   if (!container) return;
   
   const filtered = allDoctors.filter(d => d.specialty === wizardState.specialty);
+  if (!filtered.length) {
+    container.innerHTML = '<p class="empty-state">No doctors available for this specialty yet.</p>';
+    return;
+  }
   
   container.innerHTML = filtered.map(doc => `
     <div class="doctor-card-wizard" data-doctor-id="${doc._id}" data-doctor-name="${doc.name}">
@@ -1344,10 +1403,10 @@ function renderDoctorsBySpecialty() {
     </div>
   `).join('');
 
-  // Add click handlers
-  document.querySelectorAll('.doctor-card-wizard').forEach(card => {
+  const cards = document.querySelectorAll('.doctor-card-wizard');
+  cards.forEach(card => {
     card.addEventListener('click', () => {
-      document.querySelectorAll('.doctor-card-wizard').forEach(c => c.classList.remove('selected'));
+      cards.forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       wizardState.doctorId = card.dataset.doctorId;
       wizardState.doctorName = card.dataset.doctorName;
@@ -1355,8 +1414,15 @@ function renderDoctorsBySpecialty() {
     });
   });
 
-  // If doctor was pre-selected from URL, highlight it
-  if (wizardState.doctorId) {
+  if (!wizardState.doctorId) {
+    const firstCard = cards[0];
+    if (firstCard) {
+      firstCard.classList.add('selected');
+      wizardState.doctorId = firstCard.dataset.doctorId;
+      wizardState.doctorName = firstCard.dataset.doctorName;
+      document.getElementById('confirm-doctor-btn').disabled = false;
+    }
+  } else {
     const preselected = document.querySelector(`.doctor-card-wizard[data-doctor-id="${wizardState.doctorId}"]`);
     if (preselected) {
       preselected.classList.add('selected');
@@ -1419,10 +1485,35 @@ function showStep(stepNumber) {
 
 function initWizard() {
   const dateInput = document.getElementById('appt-date');
+  const reasonInput = document.getElementById('appt-reason');
+  const stepThree = document.getElementById('step-3');
+
+  if (stepThree) {
+    attachValidation(stepThree);
+  }
   
-  // Set minimum date to today
   if (dateInput) {
     dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+    dateInput.addEventListener('change', () => {
+      const selectedDate = new Date(dateInput.value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        showNotification('Appointment date cannot be in the past', 'error');
+        dateInput.value = '';
+      }
+    });
+  }
+
+  if (reasonInput) {
+    reasonInput.addEventListener('input', () => {
+      const trimmed = reasonInput.value.trim();
+      if (trimmed.length > 0 && trimmed.length < 5) {
+        showFieldError(reasonInput, 'Please add a bit more detail so your doctor can prepare.');
+      } else {
+        clearFieldError(reasonInput);
+      }
+    });
   }
 
   // Next button handlers
@@ -1430,27 +1521,58 @@ function initWizard() {
     btn.addEventListener('click', () => {
       const nextStep = parseInt(btn.dataset.next);
 
-      // Validate before moving to next step
-      if (nextStep === 2 && !wizardState.specialty) {
-        showNotification('Please select a specialty first', 'error');
-        return;
+      if (nextStep === 2) {
+        if (!wizardState.specialty) {
+          wizardState.specialty = uniqueSpecialties[0] || null;
+        }
+        if (!wizardState.specialty) {
+          showNotification('Please select a specialty first', 'error');
+          return;
+        }
+        renderDoctorsBySpecialty();
       }
-      if (nextStep === 3 && !wizardState.doctorId) {
-        showNotification('Please select a doctor', 'error');
-        return;
+
+      if (nextStep === 3) {
+        if (!wizardState.doctorId) {
+          const firstDoctor = document.querySelector('.doctor-card-wizard');
+          if (firstDoctor) {
+            wizardState.doctorId = firstDoctor.dataset.doctorId;
+            wizardState.doctorName = firstDoctor.dataset.doctorName;
+          }
+        }
+        if (!wizardState.doctorId) {
+          showNotification('Please select a doctor', 'error');
+          return;
+        }
       }
+
       if (nextStep === 4) {
-        const date = document.getElementById('appt-date').value;
+        const dateInput = document.getElementById('appt-date');
+        const date = dateInput?.value || '';
         const timeSlot = document.querySelector('input[name="timeslot"]:checked');
-        
-        if (!date || !timeSlot) {
-          showNotification('Please select both date and time', 'error');
+        const reasonInput = document.getElementById('appt-reason');
+        const reasonText = reasonInput?.value.trim() || '';
+
+        if (!date) {
+          showFieldError(dateInput, 'Please choose a preferred date before continuing.');
+          showNotification('Please choose a preferred date before continuing.', 'error');
+          return;
+        }
+
+        if (!timeSlot) {
+          showNotification('Please choose an available time slot before continuing.', 'error');
+          return;
+        }
+
+        if (reasonText && reasonText.length < 5) {
+          showFieldError(reasonInput, 'Please add a bit more detail so your doctor can prepare.');
+          showNotification('Please add a bit more detail to your visit reason.', 'error');
           return;
         }
         
         wizardState.date = date;
         wizardState.time = timeSlot.value;
-        wizardState.reason = document.getElementById('appt-reason').value;
+        wizardState.reason = reasonText;
       }
 
       showStep(nextStep);
@@ -2370,7 +2492,7 @@ function setMaxDateOfBirth() {
 }
 
 function initInlineValidation() {
-  const emailInput = document.getElementById('reg-email') || document.getElementById('profile-email') || document.getElementById('login-email');
+  const emailInput = document.getElementById('reg-email') || document.getElementById('profile-email');
   if (emailInput) {
     emailInput.addEventListener('input', () => {
       const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value);
@@ -2378,7 +2500,7 @@ function initInlineValidation() {
     });
   }
 
-  const passwordInput = document.getElementById('reg-password') || document.getElementById('login-password');
+  const passwordInput = document.getElementById('reg-password');
   if (passwordInput) {
     passwordInput.addEventListener('input', () => {
       const isValid = passwordInput.value.length >= 6;
@@ -2396,9 +2518,27 @@ window.addEventListener('beforeunload', () => {
 
 // ========== FORM VALIDATION ==========
 
+function showFieldError(input, message) {
+  const errorElement = input.parentElement?.querySelector('.field-error') || input.closest('.form-group')?.querySelector('.field-error');
+  if (errorElement) {
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+  }
+  input.setAttribute('aria-invalid', 'true');
+}
+
+function clearFieldError(input) {
+  const errorElement = input.parentElement?.querySelector('.field-error') || input.closest('.form-group')?.querySelector('.field-error');
+  if (errorElement) {
+    errorElement.textContent = '';
+    errorElement.style.display = 'none';
+  }
+  input.removeAttribute('aria-invalid');
+}
+
 // Validate a single field with real‑time feedback
 function validateField(input, rules) {
-  const errorElement = input.parentElement.querySelector('.field-error');
+  const errorElement = input.parentElement?.querySelector('.field-error') || input.closest('.form-group')?.querySelector('.field-error');
   const value = input.value.trim();
 
   let isValid = true;
@@ -2489,11 +2629,11 @@ function getValidationRules(input) {
     rules.push(validators.required());
   }
 
-  if (id === 'reg-email' || id === 'login-email' || id === 'profile-email') {
+  if (id === 'reg-email' || id === 'profile-email') {
     rules.push(validators.email());
   }
 
-  if (id === 'reg-password' || id === 'login-password') {
+  if (id === 'reg-password') {
     rules.push(validators.minLength(6, 'Password must be at least 6 characters'));
   }
 
@@ -2507,53 +2647,6 @@ function getValidationRules(input) {
 
   return rules;
 }
-
-
-function initLoginForm() {
-  const loginForm = document.querySelector('#panel-login form');
-  if (!loginForm) return;
-
-  // Attach validation
-  attachValidation(loginForm);
-
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // Validate all inputs before submission
-    const inputs = loginForm.querySelectorAll('input[required]');
-    let isValid = true;
-    inputs.forEach(input => {
-      if (!validateInput(input)) isValid = false;
-    });
-
-    if (!isValid) {
-      showNotification('Please fix all errors before submitting.', 'error');
-      return;
-    }
-
-    // ... rest of login logic with try/catch ...
-  });
-}
-
-
-function initWizard() {
-  // ... existing wizard init ...
-
-  // Add real‑time validation to date and time
-  const dateInput = document.getElementById('appt-date');
-  if (dateInput) {
-    dateInput.addEventListener('change', () => {
-      const selectedDate = new Date(dateInput.value);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        showNotification('Appointment date cannot be in the past', 'error');
-        dateInput.value = '';
-      }
-    });
-  }
-}
-
 
 function setLoading(button, loading = true) {
   if (loading) {

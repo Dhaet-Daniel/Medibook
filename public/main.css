@@ -84,13 +84,18 @@ h1, h2, h3 {
 .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
 
 /* ── Buttons ── */
-.btn {
+.btn,
+.btn-sm {
   display: inline-flex; align-items: center; justify-content: center;
-  gap: .5rem; padding: 10px 24px; font-size: 1rem; font-weight: 600;
-  border-radius: var(--radius-md); border: 1px solid transparent;
-  text-decoration: none; cursor: pointer; transition: all .2s ease;
-  min-height: 44px; position: relative; overflow: hidden;
-  font-family: var(--font-base);
+  gap: .5rem; font-weight: 600; border-radius: var(--radius-md);
+  border: 1px solid transparent; text-decoration: none; cursor: pointer;
+  transition: all .2s ease; font-family: var(--font-base);
+}
+.btn {
+  padding: 10px 24px; font-size: 1rem; min-height: 44px; position: relative; overflow: hidden;
+}
+.btn-sm {
+  padding: 0.35rem 0.8rem; font-size: 0.85rem; min-height: 32px;
 }
 /* Disabled button state used by quick-actions */
 .btn.disabled,
