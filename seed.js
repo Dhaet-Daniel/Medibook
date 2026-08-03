@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 
 const Doctor = require('./models/Doctor');
 const User = require('./models/User');
+const Setting = require('./models/Setting');
 
 const doctors = [
   {
@@ -80,6 +81,29 @@ mongoose.connect(process.env.MONGODB_URI)
     }
 
     console.log('Doctor user ready: doctor@medibook.com / Doctor123!');
+
+    const defaultSettings = [
+      { key: 'siteName', value: 'MediBook Hospital' },
+      { key: 'contactEmail', value: 'support@medibook.hospital' },
+      { key: 'contactPhone', value: '+260 977 123 456' },
+      { key: 'defaultAppointmentDuration', value: 30 },
+      { key: 'maxAppointmentsPerDay', value: 10 },
+      { key: 'allowSameDayBooking', value: true },
+      { key: 'bookingWindowDays', value: 30 },
+      { key: 'clinicName', value: 'MediBook Clinic' },
+      { key: 'clinicAddress', value: '123 Main Street, City' },
+      { key: 'timezone', value: 'Africa/Lusaka' },
+      { key: 'defaultLanguage', value: 'en' }
+    ];
+
+    for (const setting of defaultSettings) {
+      await Setting.findOneAndUpdate(
+        { key: setting.key },
+        setting,
+        { upsert: true }
+      );
+    }
+    console.log('✅ Default settings seeded');
 
     process.exit();
   })

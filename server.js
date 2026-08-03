@@ -14,6 +14,7 @@ const appointmentRoutes = require('./routes/appointments');
 const doctorRoutes = require('./routes/doctor');   // doctor-specific routes
 const adminRoutes = require('./routes/admin');
 const patientRoutes = require('./routes/patient');
+const settingRoutes = require('./routes/settings');
 // Role middleware (adjust the path if your middleware is stored elsewhere)
 const { authorize } = require('./middleware/role'); 
 
@@ -35,6 +36,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', patientRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Fallback for client-side routing (must be AFTER all API routes)
 app.get('*', (req, res) => {

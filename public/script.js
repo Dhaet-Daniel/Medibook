@@ -1926,6 +1926,107 @@ function setupAdminNavigation() {
   });
 }
 
+async function loadAdminSettings() {
+  const form = document.getElementById('settings-form');
+  if (!form) return;
+
+  try {
+    const res = await fetch('/api/settings', { headers: authHeader() });
+    if (!res.ok) throw new Error('Failed to load settings');
+    const settings = await res.json();
+
+    const fieldMap = {
+      siteName: settings.siteName || '',
+      contactEmail: settings.contactEmail || '',
+      contactPhone: settings.contactPhone || '',
+      defaultAppointmentDuration: settings.defaultAppointmentDuration ?? 30,
+      maxAppointmentsPerDay: settings.maxAppointmentsPerDay ?? 10,
+      bookingWindowDays: settings.bookingWindowDays ?? 30,
+      allowSameDayBooking: Boolean(settings.allowSameDayBooking),
+      clinicName: settings.clinicName || '',
+      clinicAddress: settings.clinicAddress || '',
+      timezone: settings.timezone || 'Africa/Lusaka',
+      defaultLanguage: settings.defaultLanguage || 'en'
+    };
+
+    Object.entries(fieldMap).forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'checkbox') {
+        el.checked = Boolean(value);
+      } else {
+        el.value = value;
+      }
+    });
+  } catch (err) {
+    console.error('Settings load error:', err);
+    showNotification(err.message || 'Failed to load settings', 'error');
+  }
+}
+
+async function saveAdminSettings(event) {
+  event.preventDefault();
+
+  const payload = {
+    siteName: document.getElementById('siteName')?.value.trim() || '',
+    contactEmail: document.getElementById('contactEmail')?.value.trim() || '',
+    contactPhone: document.getElementById('contactPhone')?.value.trim() || '',
+    defaultAppointmentDuration: Number(document.getElementById('defaultAppointmentDuration')?.value || 30),
+    maxAppointmentsPerDay: Number(document.getElementById('maxAppointmentsPerDay')?.value || 10),
+    bookingWindowDays: Number(document.getElementById('bookingWindowDays')?.value || 30),
+    allowSameDayBooking: document.getElementById('allowSameDayBooking')?.checked || false,
+    clinicName: document.getElementById('clinicName')?.value.trim() || '',
+    clinicAddress: document.getElementById('clinicAddress')?.value.trim() || '',
+    timezone: document.getElementById('timezone')?.value || 'Africa/Lusaka',
+    defaultLanguage: document.getElementById('defaultLanguage')?.value || 'en'
+  };
+
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: authHeader(),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to save settings');
+    }
+    showNotification('Settings saved successfully', 'success');
+  } catch (err) {
+    console.error('Settings save error:', err);
+    showNotification(err.message || 'Failed to save settings', 'error');
+  }
+}
+
+async function resetAdminSettings() {
+  if (!confirm('Reset all settings to the default values?')) return;
+
+  try {
+    const res = await fetch('/api/settings/reset', {
+      method: 'POST',
+      headers: authHeader()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to reset settings');
+    }
+    await loadAdminSettings();
+    showNotification('Settings reset to defaults', 'success');
+  } catch (err) {
+    console.error('Settings reset error:', err);
+    showNotification(err.message || 'Failed to reset settings', 'error');
+  }
+}
+
+function initSettingsForm() {
+  const form = document.getElementById('settings-form');
+  if (!form) return;
+
+  form.addEventListener('submit', saveAdminSettings);
+  document.getElementById('reset-settings')?.addEventListener('click', resetAdminSettings);
+  loadAdminSettings();
+}
+
 // --- Page renderer ---
 function showAdminPage(page) {
   const container = document.getElementById('page-container');
@@ -1988,8 +2089,111 @@ function showAdminPage(page) {
   } 
   else if (page === 'settings') {
     container.innerHTML = `
-      <div class="card"><h3>System Settings</h3><p>Configure platform settings (coming soon).</p></div>
+      <div class="settings-container">
+        <div class="settings-header">
+          <h2>⚙️ System Settings</h2>
+          <p>Configure global platform settings</p>
+        </div>
+
+        <form id="settings-form" class="settings-form">
+          <div class="settings-section">
+            <h3>🏢 General Settings</h3>
+            <div class="form-group">
+              <label for="siteName">Site Name</label>
+              <input type="text" id="siteName" placeholder="MediBook Hospital">
+              <span class="field-hint">Displayed in the header and emails</span>
+            </div>
+            <div class="form-group">
+              <label for="contactEmail">Contact Email</label>
+              <input type="email" id="contactEmail" placeholder="support@medibook.hospital">
+              <span class="field-hint">Used for system notifications</span>
+            </div>
+            <div class="form-group">
+              <label for="contactPhone">Contact Phone</label>
+              <input type="text" id="contactPhone" placeholder="+260 977 123 456">
+              <span class="field-hint">Displayed in footer and notifications</span>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>📅 Appointment Settings</h3>
+            <div class="form-group">
+              <label for="defaultAppointmentDuration">Default Duration (minutes)</label>
+              <input type="number" id="defaultAppointmentDuration" min="15" max="120" step="5">
+              <span class="field-hint">Default appointment length for all doctors</span>
+            </div>
+            <div class="form-group">
+              <label for="maxAppointmentsPerDay">Max Appointments Per Day</label>
+              <input type="number" id="maxAppointmentsPerDay" min="1" max="50">
+              <span class="field-hint">Maximum appointments a doctor can have per day</span>
+            </div>
+            <div class="form-group">
+              <label for="bookingWindowDays">Booking Window (days ahead)</label>
+              <input type="number" id="bookingWindowDays" min="1" max="90">
+              <span class="field-hint">How far in advance patients can book</span>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="allowSameDayBooking">
+                Allow Same-Day Booking
+              </label>
+              <span class="field-hint">Allow patients to book appointments on the same day</span>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>🏥 Clinic Settings</h3>
+            <div class="form-group">
+              <label for="clinicName">Clinic Name</label>
+              <input type="text" id="clinicName" placeholder="MediBook Clinic">
+              <span class="field-hint">Displayed on invoices and notifications</span>
+            </div>
+            <div class="form-group">
+              <label for="clinicAddress">Clinic Address</label>
+              <input type="text" id="clinicAddress" placeholder="123 Main Street, City">
+              <span class="field-hint">Physical clinic address</span>
+            </div>
+            <div class="form-group">
+              <label for="timezone">Timezone</label>
+              <select id="timezone">
+                <option value="Africa/Lusaka">Africa/Lusaka</option>
+                <option value="Africa/Johannesburg">Africa/Johannesburg</option>
+                <option value="Africa/Nairobi">Africa/Nairobi</option>
+                <option value="Africa/Lagos">Africa/Lagos</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="Europe/Paris">Europe/Paris</option>
+                <option value="Asia/Dubai">Asia/Dubai</option>
+                <option value="Asia/Kolkata">Asia/Kolkata</option>
+                <option value="Asia/Shanghai">Asia/Shanghai</option>
+                <option value="Australia/Sydney">Australia/Sydney</option>
+                <option value="UTC">UTC</option>
+              </select>
+              <span class="field-hint">System timezone for all dates and times</span>
+            </div>
+            <div class="form-group">
+              <label for="defaultLanguage">Default Language</label>
+              <select id="defaultLanguage">
+                <option value="en">English</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="pt">Português</option>
+                <option value="sw">Swahili</option>
+                <option value="zu">Zulu</option>
+              </select>
+              <span class="field-hint">Default language for the platform</span>
+            </div>
+          </div>
+
+          <div class="settings-actions">
+            <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+            <button type="button" id="reset-settings" class="btn btn-outline">↩️ Reset to Default</button>
+          </div>
+        </form>
+      </div>
     `;
+    initSettingsForm();
   }
 }
 
@@ -2736,3 +2940,89 @@ function withErrorHandling(fn) {
 
 // Usage: wrap any async function
 const safeFetchAppointments = withErrorHandling(fetchAppointments);
+
+
+
+// ========== SYSTEM SETTINGS ==========
+
+async function loadSettings() {
+  try {
+    const res = await fetch('/api/settings', { headers: authHeader() });
+    if (!res.ok) throw new Error('Failed to load settings');
+    const settings = await res.json();
+
+    document.getElementById('siteName').value = settings.siteName || '';
+    document.getElementById('contactEmail').value = settings.contactEmail || '';
+    document.getElementById('contactPhone').value = settings.contactPhone || '';
+    document.getElementById('defaultAppointmentDuration').value = settings.defaultAppointmentDuration || 30;
+    document.getElementById('maxAppointmentsPerDay').value = settings.maxAppointmentsPerDay || 10;
+    document.getElementById('bookingWindowDays').value = settings.bookingWindowDays || 30;
+    document.getElementById('allowSameDayBooking').checked = settings.allowSameDayBooking || false;
+    document.getElementById('clinicName').value = settings.clinicName || '';
+    document.getElementById('clinicAddress').value = settings.clinicAddress || '';
+    document.getElementById('timezone').value = settings.timezone || 'Africa/Lusaka';
+    document.getElementById('defaultLanguage').value = settings.defaultLanguage || 'en';
+  } catch (err) {
+    showNotification('Failed to load settings', 'error');
+    console.error(err);
+  }
+}
+
+function initSettingsForm() {
+  const form = document.getElementById('settings-form');
+  if (!form) return;
+
+  // Load settings on page load
+  loadSettings();
+
+  // Save settings
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = form.querySelector('button[type="submit"]');
+    setLoading(submitBtn, true);
+
+    const data = {
+      siteName: document.getElementById('siteName').value.trim(),
+      contactEmail: document.getElementById('contactEmail').value.trim(),
+      contactPhone: document.getElementById('contactPhone').value.trim(),
+      defaultAppointmentDuration: parseInt(document.getElementById('defaultAppointmentDuration').value) || 30,
+      maxAppointmentsPerDay: parseInt(document.getElementById('maxAppointmentsPerDay').value) || 10,
+      bookingWindowDays: parseInt(document.getElementById('bookingWindowDays').value) || 30,
+      allowSameDayBooking: document.getElementById('allowSameDayBooking').checked,
+      clinicName: document.getElementById('clinicName').value.trim(),
+      clinicAddress: document.getElementById('clinicAddress').value.trim(),
+      timezone: document.getElementById('timezone').value,
+      defaultLanguage: document.getElementById('defaultLanguage').value
+    };
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: authHeader(),
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('Failed to save settings');
+      showNotification('Settings saved successfully!', 'success');
+    } catch (err) {
+      showNotification(err.message, 'error');
+    } finally {
+      setLoading(submitBtn, false);
+    }
+  });
+
+  // Reset to default
+  document.getElementById('reset-settings').addEventListener('click', async () => {
+    if (!confirm('Reset all settings to default values?')) return;
+    try {
+      const res = await fetch('/api/settings/reset', {
+        method: 'POST',
+        headers: authHeader()
+      });
+      if (!res.ok) throw new Error('Failed to reset settings');
+      showNotification('Settings reset to default', 'success');
+      loadSettings(); // Reload the form
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  });
+}
